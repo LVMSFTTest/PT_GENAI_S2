@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training & Fine-tuning LLMs — A Plain-English Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117;
+    --paper: #f9f6f0;
+    --cream: #f0ebe0;
+    --accent: #c8420a;
+    --accent2: #1a6b4a;
+    --accent3: #2d4a8a;
+    --muted: #6b6560;
+    --card: #ffffff;
+    --border: #ddd8ce;
+    --code-bg: #1a1a2e;
+    --code-text: #a8dadc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 80px 48px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    border: 60px solid rgba(200,66,10,0.12);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 120px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 40px solid rgba(26,107,74,0.1);
+  }
+  .hero-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 900;
+    line-height: 1.1;
+    max-width: 680px;
+    margin-bottom: 20px;
+  }
+  .hero p {
+    color: rgba(249,246,240,0.65);
+    font-size: 17px;
+    max-width: 560px;
+    font-weight: 300;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 36px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border: 1px solid rgba(249,246,240,0.2);
+    border-radius: 2px;
+    color: rgba(249,246,240,0.55);
+    letter-spacing: 1px;
+  }
+
+  /* ---- NAV ---- */
+  .toc {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 48px;
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .toc-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 8px;
+  }
+  .toc a {
+    font-size: 13px;
+    color: var(--accent3);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .toc a:hover { background: var(--border); }
+
+  /* ---- MAIN ---- */
+  main { max-width: 900px; margin: 0 auto; padding: 0 32px 80px; }
+
+  /* ---- SECTION ---- */
+  section {
+    padding: 64px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 64px;
+  }
+  section:first-of-type { border-top: none; margin-top: 48px; }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .section-intro {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 720px;
+    margin-bottom: 40px;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  /* ---- ANALOGY BOX ---- */
+  .analogy {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin: 32px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .analogy::before {
+    content: '"';
+    font-family: 'Playfair Display', serif;
+    font-size: 120px;
+    color: rgba(200,66,10,0.15);
+    position: absolute;
+    top: -10px; left: 16px;
+    line-height: 1;
+  }
+  .analogy-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .analogy p { font-size: 15px; color: rgba(249,246,240,0.85); line-height: 1.8; }
+
+  /* ---- CARDS GRID ---- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    position: relative;
+  }
+  .card-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  .card.accent-red { border-left: 3px solid var(--accent); }
+  .card.accent-green { border-left: 3px solid var(--accent2); }
+  .card.accent-blue { border-left: 3px solid var(--accent3); }
+
+  /* ---- EXAMPLE BOX ---- */
+  .example {
+    background: #f0f7f4;
+    border-left: 3px solid var(--accent2);
+    padding: 20px 24px;
+    border-radius: 0 4px 4px 0;
+    margin: 24px 0;
+  }
+  .example-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .example p { font-size: 14px; color: #1a3d2e; line-height: 1.7; }
+
+  /* ---- CODE ---- */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+  .code-block pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--code-text);
+    line-height: 1.8;
+    white-space: pre;
+  }
+  .code-comment { color: #556b7a; }
+  .code-key { color: #f4a261; }
+  .code-val { color: #90e0ef; }
+  .code-str { color: #95d5b2; }
+
+  /* ---- COMPARISON TABLE ---- */
+  .compare-table { width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 14px; }
+  .compare-table th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 400;
+  }
+  .compare-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .compare-table tr:nth-child(even) td { background: var(--cream); }
+  .compare-table .yes { color: var(--accent2); font-weight: 500; }
+  .compare-table .no { color: var(--accent); font-weight: 500; }
+
+  /* ---- FLOW STEPS ---- */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 32px 0; }
+  .step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--border);
+    min-width: 36px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .step-content h4 { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+  .step-content p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* ---- CALLOUT ---- */
+  .callout {
+    background: #fff8f5;
+    border: 1px solid #f4c5b0;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    font-size: 14px;
+    color: #6b2a0a;
+    line-height: 1.7;
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ---- PILL TAGS ---- */
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .pill-red { background: #fff0ec; color: var(--accent); border-color: #f4c5b0; }
+  .pill-green { background: #edf7f2; color: var(--accent2); border-color: #b0ddc4; }
+  .pill-blue { background: #eef2fb; color: var(--accent3); border-color: #b0c2e8; }
+
+  /* ---- METRIC CARDS ---- */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 28px 0; }
+  .metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+  }
+  .metric-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .metric-label { font-size: 12px; color: var(--muted); letter-spacing: 0.5px; }
+
+  /* ---- HIGHLIGHT ---- */
+  mark { background: #fff3cd; padding: 0 3px; border-radius: 2px; }
+
+  /* ---- FOOTER ---- */
+  footer {
+    background: var(--ink);
+    color: rgba(249,246,240,0.5);
+    text-align: center;
+    padding: 32px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* ---- TWO COL ---- */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } .hero { padding: 48px 24px; } .toc { padding: 16px 24px; } main { padding: 0 20px 60px; } }
+
+  h2.sub {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    margin: 36px 0 12px;
+    color: var(--ink);
+  }
+  p { margin-bottom: 14px; }
+  ul { padding-left: 20px; margin-bottom: 14px; }
+  li { margin-bottom: 6px; font-size: 15px; color: var(--muted); }
+  li strong { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Session Notes — LLM Engineering</div>
+  <h1>Training & Fine-tuning Large Language Models</h1>
+  <p>Everything from your slides, explained in plain English with real examples — so it actually sticks.</p>
+  <div class="hero-tags">
+    <span class="tag">Fine-tuning</span>
+    <span class="tag">Hyperparameters</span>
+    <span class="tag">Dataset Prep</span>
+    <span class="tag">BLEU & ROUGE</span>
+    <span class="tag">RAG</span>
+    <span class="tag">W&B</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<nav class="toc">
+  <span class="toc-label">Jump to</span>
+  <a href="#s1">Fine-tuning</a>
+  <a href="#s2">Dataset Prep</a>
+  <a href="#s3">Hyperparameters</a>
+  <a href="#s4">Training & Eval</a>
+  <a href="#s5">BLEU & ROUGE</a>
+  <a href="#s6">RAG</a>
+  <a href="#s7">W&B</a>
+</nav>
+
+<main>
+
+<!-- SECTION 1: FINE-TUNING -->
+<section id="s1">
+  <div class="section-num">Section 01</div>
+  <h1 class="section-title">Why Fine-tune an LLM?</h1>
+  <p class="section-intro">A pre-trained model like GPT or Flan-T5 is brilliant at general conversation — but it's like a generalist doctor who knows a little about everything. Fine-tuning turns that generalist into a specialist.</p>
+
+  <div class="analogy">
+    <div class="analogy-label">Think of it this way</div>
+    <p>GPT-4 is a brilliant university graduate who read the entire internet. But if you hire them as a tax lawyer without training, they'll give you generic advice. <strong>Fine-tuning = law school</strong>. You take the same smart brain and teach it the domain-specific rules, vocabulary, and patterns it needs.</p>
+  </div>
+
+  <h2 class="sub">The Core Problem with Generic Models</h2>
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">🎯</span>
+      <h3>Generalization Limits</h3>
+      <p>Models like GPT-2 are trained on massive general datasets. They understand language well, but lack the nuance of specialized domains like medical diagnosis, legal contracts, or Indian cuisine recipes.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🔧</span>
+      <h3>Task-specific Gaps</h3>
+      <p>A customer support chatbot needs to know your product, your policies, your tone. No pre-trained model ships with that. Fine-tuning bridges the gap between "smart but generic" and "useful in production."</p>
+    </div>
+  </div>
+
+  <h2 class="sub">The Three Big Benefits</h2>
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">🏆</span>
+      <h3>Task Optimization</h3>
+      <p>A general image classifier can be fine-tuned to read chest X-rays with 95%+ accuracy — something the base model could never do. The model learns the exact vocabulary and patterns of your domain.</p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">⚡</span>
+      <h3>Resource Efficiency</h3>
+      <p>Training GPT-3 from scratch cost OpenAI ~$4.6M. Fine-tuning a pre-trained model for your task? A few hundred dollars and a weekend. You're borrowing billions of learned parameters and just adapting the final layers.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🔄</span>
+      <h3>Adaptability</h3>
+      <p>The same base GPT model has been fine-tuned into: a legal contract writer, a coding assistant, a customer support bot, and a poetry generator — all with different training data, same base model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: DATASET PREP -->
+<section id="s2">
+  <div class="section-num">Section 02</div>
+  <h1 class="section-title">Dataset Preparation & Pre-processing</h1>
+  <p class="section-intro">Garbage in, garbage out. A model is only as good as the data it's trained on. This section covers how to collect, clean, and enrich your training data before a single parameter gets updated.</p>
+
+  <div class="callout">
+    <strong>The golden rule:</strong> High-quality labeled data is the single biggest factor in fine-tuning success. A smaller, clean dataset consistently outperforms a larger, noisy one. Spend 60% of your effort here — it pays off more than any hyperparameter tweak.
+  </div>
+
+  <h2 class="sub">The Three Consequences of Bad Data</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h4>Overfitting — The Memorizer</h4>
+        <p>The model memorizes your training examples instead of learning patterns. It scores 98% on training data and 40% on anything new. Like a student who only memorizes past exam papers — stumped by any new question.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h4>Underfitting — The Slacker</h4>
+        <p>The model doesn't learn enough — even training data gets wrong answers. Usually caused by too little data, too few epochs, or data so noisy the model can't find signal. Like trying to learn French from 10 random sentences.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h4>Biased Predictions — The Echo Chamber</h4>
+        <p>If your training data has biases (e.g., all positive reviews, only one writing style), the model inherits and amplifies those biases. A sentiment model trained only on Amazon tech reviews will fail on restaurant reviews.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sub">Data Augmentation — Make More From Less</h2>
+  <p>When you don't have enough data, augmentation creates new training examples by transforming existing ones without changing their meaning.</p>
+
+  <div class="two-col">
+    <div class="example">
+      <div class="example-label">Text Augmentation</div>
+      <p><strong>Original:</strong> "The movie was amazing"<br>
+      <strong>Synonym swap:</strong> "The film was incredible"<br>
+      <strong>Back-translation:</strong> Translate to French → translate back to English → slightly different phrasing<br>
+      Same meaning, new training example.</p>
+    </div>
+    <div class="example">
+      <div class="example-label">Image Augmentation</div>
+      <p><strong>Original:</strong> Photo of a cat (facing right)<br>
+      <strong>Flip:</strong> Cat facing left ✓<br>
+      <strong>Rotate 15°:</strong> Slightly tilted cat ✓<br>
+      <strong>Brightness +20%:</strong> Bright light photo ✓<br>
+      One image → 4 training examples.</p>
+    </div>
+  </div>
+
+  <h2 class="sub">Synthetic Data — Invent What You Don't Have</h2>
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">🎭</span>
+      <h3>GANs (Generative Adversarial Networks)</h3>
+      <p>Two networks fight each other: a <em>generator</em> creates fake data, a <em>discriminator</em> tries to catch fakes. The generator keeps improving until its output is indistinguishable from real data. Used to generate synthetic faces, medical scans, financial transactions.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🔢</span>
+      <h3>VAEs (Variational Autoencoders)</h3>
+      <p>Compress data into a "latent space" (a mathematical summary), then generate new variations by sampling nearby points in that space. Great for generating variations of handwritten digits, molecular structures, or music patterns.</p>
+    </div>
+  </div>
+
+  <h2 class="sub">Pre-processing Pipeline</h2>
+  <div class="code-block">
+    <pre><span class="code-comment"># A typical pre-processing pipeline for LLM fine-tuning</span>
+
+<span class="code-key">Step 1 — Filter</span>
+  Remove duplicates, empty strings, corrupted records
+  Flag outliers (suspiciously short or long texts)
+
+<span class="code-key">Step 2 — Clean</span>
+  Fix encoding errors (UTF-8 issues, weird characters)
+  Strip HTML tags, URLs, promotional boilerplate
+
+<span class="code-key">Step 3 — Tokenize</span>
+  <span class="code-str">"Hello world!"</span>  →  [<span class="code-val">15496</span>, <span class="code-val">995</span>, <span class="code-val">0</span>]
+  Each number maps to a token in the model's vocabulary
+
+<span class="code-key">Step 4 — Normalize</span>
+  Lowercase text (if task requires it)
+  Standardize date formats, number formats
+
+<span class="code-key">Step 5 — Split</span>
+  80% Training  |  10% Validation  |  10% Test
+  Never let test data touch training — that's cheating</pre>
+  </div>
+</section>
+
+<!-- SECTION 3: HYPERPARAMETERS -->
+<section id="s3">
+  <div class="section-num">Section 03</div>
+  <h1 class="section-title">Hyperparameter Optimization</h1>
+  <p class="section-intro">Hyperparameters are the knobs you turn before training starts. Unlike model weights (learned automatically), hyperparameters are set by you — and getting them right is as much art as science.</p>
+
+  <div class="analogy">
+    <div class="analogy-label">The Baking Analogy</div>
+    <p>Think of training a model like baking bread. The <strong>learning rate</strong> is how aggressively you knead the dough. Too fast = you tear it. Too slow = it never comes together. The <strong>batch size</strong> is how much dough you work at once. <strong>Epochs</strong> = how many times you let it rise. Get these wrong and the bread won't rise, or it'll burn.</p>
+  </div>
+
+  <h2 class="sub">The 6 Key Hyperparameters</h2>
+
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">📈</span>
+      <h3>1. Learning Rate (LR)</h3>
+      <p>Controls how much the model's weights change after each batch. <mark>Most important hyperparameter.</mark></p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">📦</span>
+      <h3>2. Batch Size</h3>
+      <p>How many training examples the model sees before updating weights. Small = noisy but good generalization. Large = stable but memory hungry.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">⚙️</span>
+      <h3>3. Optimizer</h3>
+      <p>The algorithm that applies weight updates. <strong>Adam</strong> is the default workhorse. SGD for large datasets. RMSprop for recurrent models.</p>
+    </div>
+    <div class="card accent-red">
+      <span class="card-icon">🌡️</span>
+      <h3>4. Warm-up Steps</h3>
+      <p>Gradually ramp the learning rate from near-zero at the start of training. Prevents wild early updates from destroying pre-trained weights.</p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">🔁</span>
+      <h3>5. Number of Epochs</h3>
+      <p>How many full passes through the dataset. Too few = underfitting. Too many = overfitting. Use early stopping to find the sweet spot automatically.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🧊</span>
+      <h3>6. Frozen Layers</h3>
+      <p>Which layers to keep unchanged (frozen) and which to fine-tune. Lower layers = general features (freeze them). Higher layers = task-specific (tune these).</p>
+    </div>
+  </div>
+
+  <h2 class="sub">Learning Rate in Depth</h2>
+  <div class="code-block">
+    <pre><span class="code-comment"># LLaMA-3 8B has 8,000,000,000 parameters.
+# Each training step does this:</span>
+
+<span class="code-key">1. Forward pass:</span>   Model predicts next token
+<span class="code-key">2. Loss computed:</span>  How wrong was the prediction?
+<span class="code-key">3. Backprop:</span>      Calculate gradient for each of 8B params
+<span class="code-key">4. Update:</span>        weight = weight - <span class="code-val">learning_rate</span> × gradient
+
+<span class="code-comment"># If LR = 0.1  →  Big steps → may overshoot minimum loss</span>
+<span class="code-comment"># If LR = 0.00001 →  Tiny steps → very slow but precise</span>
+<span class="code-comment"># For fine-tuning LLMs, typical LR: 1e-4 to 5e-5</span></pre>
+  </div>
+
+  <h2 class="sub">Hyperparameter Search Strategies</h2>
+  <div class="compare-table-wrap" style="overflow-x:auto">
+  <table class="compare-table">
+    <thead><tr><th>Strategy</th><th>How it Works</th><th>Best For</th><th>Cost</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Grid Search</strong></td><td>Try every combination of values you specify</td><td>Small search spaces (&lt;3 params)</td><td class="no">Very High</td></tr>
+      <tr><td><strong>Random Search</strong></td><td>Sample random combos from the space</td><td>Medium spaces, quick exploration</td><td>Medium</td></tr>
+      <tr><td><strong>Bayesian Optimization</strong></td><td>Uses past results to predict the best next combo to try</td><td>Expensive evaluations, limited budget</td><td class="yes">Low</td></tr>
+      <tr><td><strong>Evolutionary Strategy</strong></td><td>Evolves a "population" of configs, breeding the best performers</td><td>Complex, multi-dimensional spaces</td><td>Medium-High</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Bayesian Optimization — Real Example</div>
+    <p>You're tuning LR and batch size. Instead of blindly trying 100 combos, Bayesian Optimization runs 10 trials, sees that LR=0.001 + batch=32 works well, and intelligently focuses future trials around those values — like a detective narrowing suspects rather than interviewing everyone in town.</p>
+  </div>
+</section>
+
+<!-- SECTION 4: TRAINING & EVALUATION -->
+<section id="s4">
+  <div class="section-num">Section 04</div>
+  <h1 class="section-title">Model Training & Evaluation</h1>
+  <p class="section-intro">Training isn't just "press go and wait." Understanding what's happening inside — and how to measure it — separates a practitioner from someone just running notebooks.</p>
+
+  <h2 class="sub">Transfer Learning — Stand on Giants' Shoulders</h2>
+  <p>Instead of training a 175B parameter model from scratch (≈ $4M, 3 months), you start with weights that already know language — then teach them your specific task.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h4>Load Pre-trained Weights</h4>
+        <p>Take GPT-2, Flan-T5, LLaMA — a model that already "knows" grammar, facts, and reasoning patterns from reading billions of tokens.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h4>Freeze Lower Layers</h4>
+        <p>The first few transformer layers detect basic language patterns (similar to how image models detect edges). These don't need changing — lock them in place.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h4>Fine-tune Upper Layers</h4>
+        <p>The final layers handle task-specific reasoning. Expose them to your domain data and let them adapt. This is where "generalist lawyer" becomes "tax specialist."</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <h4>Evaluate on Held-out Data</h4>
+        <p>Run the model on data it has never seen. If it performs well here, it has genuinely learned — not memorized.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sub">Evaluation Metrics Explained</h2>
+  <div class="cards">
+    <div class="card accent-green">
+      <span class="card-icon">✅</span>
+      <h3>Accuracy</h3>
+      <p>% of predictions that are correct. Simple. But misleading if classes are imbalanced — a model that always predicts "not fraud" can be 99% accurate but completely useless.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🎯</span>
+      <h3>Precision</h3>
+      <p>Of all the cases flagged as positive, how many actually were? High precision = few false alarms. Critical when false positives are costly (e.g., blocking a valid bank transaction).</p>
+    </div>
+    <div class="card accent-red">
+      <span class="card-icon">🔍</span>
+      <h3>Recall</h3>
+      <p>Of all actual positives, how many did we catch? High recall = few misses. Critical when false negatives are costly (e.g., missing a cancer diagnosis).</p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">⚖️</span>
+      <h3>F1 Score</h3>
+      <p>The harmonic mean of Precision and Recall. When you can't sacrifice one for the other, F1 gives you a single balanced number. Default metric for most NLP classification tasks.</p>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="example-label">Medical Diagnosis — When Recall Wins</div>
+    <p>Imagine screening 10,000 patients for a rare disease (100 actually have it). A model that catches 98 of 100 cases but has 500 false alarms has <strong>Recall = 98%</strong> and <strong>Precision = 16%</strong>. In medicine, missing a case (low recall) is far worse than extra tests (low precision). So we optimize for recall — even if it means more false positives.</p>
+  </div>
+</section>
+
+<!-- SECTION 5: BLEU & ROUGE -->
+<section id="s5">
+  <div class="section-num">Section 05</div>
+  <h1 class="section-title">BLEU & ROUGE Metrics</h1>
+  <p class="section-intro">When the output is text — not a category — you need different metrics. How do you measure "how good" a translation or summary is? BLEU and ROUGE are the industry standard answers.</p>
+
+  <div class="two-col">
+    <div class="card accent-blue">
+      <span class="card-icon">🔵</span>
+      <h3>BLEU Score</h3>
+      <p><strong>Bilingual Evaluation Understudy</strong></p>
+      <p style="margin-top:8px;">Measures <mark>precision</mark> — how many n-grams in the generated text appear in the reference text. Range: 0 (total mismatch) to 1 (identical). Designed for machine translation.</p>
+      <div class="pills" style="margin-top:12px;">
+        <span class="pill pill-blue">Precision-focused</span>
+        <span class="pill pill-blue">Translation tasks</span>
+      </div>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">🟢</span>
+      <h3>ROUGE Score</h3>
+      <p><strong>Recall-Oriented Understudy for Gisting Evaluation</strong></p>
+      <p style="margin-top:8px;">Measures <mark>recall</mark> — how much of the reference text's content is captured in the generated text. Comes in variants: ROUGE-1 (words), ROUGE-2 (pairs), ROUGE-L (longest sequence). Designed for summarization.</p>
+      <div class="pills" style="margin-top:12px;">
+        <span class="pill pill-green">Recall-focused</span>
+        <span class="pill pill-green">Summarization tasks</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sub">A Worked Example</h2>
+  <div class="code-block">
+    <pre><span class="code-comment"># Task: Summarize a news article</span>
+
+<span class="code-key">Reference (human-written):</span>
+  <span class="code-str">"The government announced a new climate policy targeting carbon emissions."</span>
+
+<span class="code-key">Model Output:</span>
+  <span class="code-str">"A new government climate policy aims to reduce carbon emissions."</span>
+
+<span class="code-comment"># ROUGE-1 (unigram overlap):</span>
+  Matching words: government, climate, policy, carbon, emissions = 5
+  Reference has 12 words → Recall = 5/12 = <span class="code-val">0.42</span>
+
+<span class="code-comment"># ROUGE-2 (bigram overlap):</span>
+  Matching pairs: "climate policy", "carbon emissions" = 2
+  Reference bigrams: 11 → Recall = 2/11 = <span class="code-val">0.18</span>
+
+<span class="code-comment"># BLEU (precision check):</span>
+  Generated has 12 words. 8 appear in reference → Precision = <span class="code-val">0.67</span></pre>
+  </div>
+
+  <h2 class="sub">Score Interpretation</h2>
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent)">0.0–0.2</div>
+      <div class="metric-label">BLEU — Poor / Random output</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:#e07b39">0.2–0.4</div>
+      <div class="metric-label">BLEU — Understandable translation</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent2)">0.4–0.6</div>
+      <div class="metric-label">BLEU — Good quality output</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent3)">0.6–1.0</div>
+      <div class="metric-label">BLEU — Near human quality</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: RAG -->
+<section id="s6">
+  <div class="section-num">Section 06</div>
+  <h1 class="section-title">Retrieval-Augmented Generation (RAG)</h1>
+  <p class="section-intro">Fine-tuning teaches a model new skills. RAG gives it access to a live library. The combination is one of the most powerful patterns in production AI today.</p>
+
+  <div class="analogy">
+    <div class="analogy-label">The Open-Book Exam Analogy</div>
+    <p>A standard LLM is like a student taking a <strong>closed-book exam</strong> — everything it knows was memorized during training. A RAG system is an <strong>open-book exam</strong>. The student (LLM) can look up your company's PDFs, latest policies, or real-time data before answering. Same brain, much better answers.</p>
+  </div>
+
+  <h2 class="sub">The RAG Pipeline — Step by Step</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h4>User asks a question (Query)</h4>
+        <p>"What is PayPal's refund policy for digital goods?"</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h4>Retriever searches your knowledge base</h4>
+        <p>Using FAISS, Pinecone, or BM25, it finds the top-K most relevant documents from your internal PDFs, help articles, or databases. Think: semantic Google search over your own documents.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h4>Context is assembled (Augment)</h4>
+        <p>The retrieved passages are inserted into the prompt: "Based on the following policy documents: [retrieved text], answer the user's question."</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <h4>LLM generates a grounded answer</h4>
+        <p>The model synthesizes the retrieved context with its language skills to produce an accurate, sourced answer — not a hallucination.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sub">RAG vs Plain LLM — Why It Matters</h2>
+  <table class="compare-table">
+    <thead><tr><th>Feature</th><th>Standard LLM</th><th>RAG-Enhanced LLM</th></tr></thead>
+    <tbody>
+      <tr><td>Knows events after training cutoff?</td><td class="no">❌ No — frozen in time</td><td class="yes">✅ Yes — pulls live data</td></tr>
+      <tr><td>Hallucination risk</td><td class="no">❌ High</td><td class="yes">✅ Low — grounded in sources</td></tr>
+      <tr><td>Uses your company's documents?</td><td class="no">❌ Never saw them</td><td class="yes">✅ Yes — retrieves them at query time</td></tr>
+      <tr><td>Can cite sources?</td><td class="no">❌ Can't reliably</td><td class="yes">✅ Yes — knows exactly where it got the info</td></tr>
+      <tr><td>Needs expensive re-training for updates?</td><td class="no">❌ Yes</td><td class="yes">✅ No — just update the vector store</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sub">The Tech Stack</h2>
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">🔍</span>
+      <h3>Retrievers</h3>
+      <p><strong>TF-IDF / BM25</strong> — keyword matching, fast, no GPU needed<br>
+      <strong>FAISS</strong> — Facebook's vector similarity search, blazing fast<br>
+      <strong>Pinecone / Chroma</strong> — managed vector databases for production</p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">🧠</span>
+      <h3>Embeddings</h3>
+      <p>Convert text to vectors so similarity search works.<br>
+      <strong>Sentence-BERT</strong> — open source, great quality<br>
+      <strong>OpenAI ada-002</strong> — commercial, excellent<br>
+      <strong>LLaMA embeddings</strong> — on-premise privacy</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">⚡</span>
+      <h3>Generators</h3>
+      <p>The LLM that reads the context and writes the answer.<br>
+      <strong>FLAN-T5</strong> — lightweight, good for structured output<br>
+      <strong>LLaMA-2 / Mistral</strong> — open source, powerful<br>
+      <strong>GPT-4</strong> — commercial, best quality</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Production formula:</strong> LoRA Fine-tuning (gives the model task-specific style and skills) + RAG Retrieval (gives it current, factual knowledge) = the gold standard architecture for enterprise GenAI. Fine-tuning alone gets stale. RAG alone can be slow. Together they're unbeatable.
+  </div>
+</section>
+
+<!-- SECTION 7: W&B -->
+<section id="s7">
+  <div class="section-num">Section 07</div>
+  <h1 class="section-title">Weights & Biases (W&B)</h1>
+  <p class="section-intro">Running an ML experiment without W&B is like cooking without tasting — you get a result but have no idea why. W&B is your experiment journal, model version control, and team dashboard all in one.</p>
+
+  <div class="analogy">
+    <div class="analogy-label">The Flight Recorder Analogy</div>
+    <p>Every training run you do is a flight. W&B is your <strong>black box flight recorder</strong>. It captures every parameter you set, every metric at every step, every model checkpoint. When something goes wrong (or unexpectedly right), you rewind the tape and find out exactly why.</p>
+  </div>
+
+  <h2 class="sub">Key Features</h2>
+  <div class="cards">
+    <div class="card accent-red">
+      <span class="card-icon">📊</span>
+      <h3>Experiment Tracking</h3>
+      <p>Every training run logs: loss curve, accuracy, LR schedule, GPU memory. Compare 10 experiments side-by-side in a browser. Never lose a good run again.</p>
+    </div>
+    <div class="card accent-green">
+      <span class="card-icon">🔖</span>
+      <h3>Model Versioning</h3>
+      <p>Save checkpoints tagged with metadata. Roll back to any model state. Know exactly which version is deployed in production — essential for teams.</p>
+    </div>
+    <div class="card accent-blue">
+      <span class="card-icon">🎛️</span>
+      <h3>Hyperparameter Sweeps</h3>
+      <p>Define a search space, W&B runs sweeps in parallel (grid / random / Bayesian) and shows you which combo wins. One command triggers 50 experiments.</p>
+    </div>
+    <div class="card accent-red">
+      <span class="card-icon">👥</span>
+      <h3>Team Collaboration</h3>
+      <p>Share experiments via URL. Comment on runs. Compare your results with teammates'. No more "works on my machine" — everyone sees the same dashboard.</p>
+    </div>
+  </div>
+
+  <h2 class="sub">W&B vs MLflow — When to Use Which</h2>
+  <table class="compare-table">
+    <thead><tr><th>Feature</th><th>W&B</th><th>MLflow</th></tr></thead>
+    <tbody>
+      <tr><td>Setup complexity</td><td class="yes">Minimal (pip install + 2 lines)</td><td>More setup required</td></tr>
+      <tr><td>Real-time visualizations</td><td class="yes">Beautiful, live dashboards</td><td>Basic, static logs</td></tr>
+      <tr><td>Hyperparameter sweeps</td><td class="yes">Built-in, automated</td><td>Manual / external tools</td></tr>
+      <tr><td>Self-hosted / on-premise</td><td>Paid enterprise tier</td><td class="yes">Free, fully self-hosted</td></tr>
+      <tr><td>Team collaboration UI</td><td class="yes">Excellent</td><td>Limited</td></tr>
+      <tr><td>Best for</td><td>Research, fast iteration</td><td>Enterprise, compliance</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block">
+    <pre><span class="code-comment"># Integrating W&B into a training script — 3 lines</span>
+
+<span class="code-key">import</span> wandb
+
+wandb.<span class="code-val">init</span>(project=<span class="code-str">"bnpl-finetuning"</span>, config={
+    <span class="code-str">"learning_rate"</span>: <span class="code-val">5e-5</span>,
+    <span class="code-str">"batch_size"</span>: <span class="code-val">16</span>,
+    <span class="code-str">"epochs"</span>: <span class="code-val">3</span>,
+    <span class="code-str">"model"</span>: <span class="code-str">"flan-t5-base"</span>
+})
+
+<span class="code-comment"># Inside your training loop:</span>
+wandb.<span class="code-val">log</span>({
+    <span class="code-str">"train_loss"</span>: loss.item(),
+    <span class="code-str">"val_bleu"</span>: bleu_score,
+    <span class="code-str">"epoch"</span>: epoch
+})
+<span class="code-comment"># That's it. Your experiment is now tracked, versioned, shareable.</span></pre>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Training &amp; Fine-tuning LLMs — Claude's Plain-English Guide &nbsp;·&nbsp; Based on course slides
+</footer>
+
+</body>
+</html>

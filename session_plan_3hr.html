@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3-Hour Session Plan — Training & Fine-tuning LLMs</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f4f0e8;
+  --ink:     #1a1812;
+  --rule:    #d4cfc4;
+  --warm:    #c8400a;
+  --teal:    #0a6b5c;
+  --blue:    #1a3f7a;
+  --amber:   #c87c0a;
+  --surface: #ffffff;
+  --muted:   #7a7168;
+  --light:   #ede9e0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  padding: 56px 60px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::after {
+  content: '3H';
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 320px;
+  color: rgba(255,255,255,0.04);
+  position: absolute;
+  right: -20px; bottom: -60px;
+  line-height: 1; pointer-events: none;
+}
+.masthead-kicker {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 3px;
+  color: var(--warm); text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.masthead h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px,6vw,76px);
+  color: #fff; line-height: 0.95;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+.masthead h1 em { color: #f0c060; font-style: normal; }
+.masthead-sub {
+  color: rgba(255,255,255,0.5);
+  font-size: 15px; font-weight: 300;
+  max-width: 540px; margin-bottom: 36px;
+}
+.stat-row { display: flex; gap: 40px; flex-wrap: wrap; }
+.stat { border-left: 2px solid var(--warm); padding-left: 16px; }
+.stat-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; color: #fff; line-height: 1;
+}
+.stat-l { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* ── TIMELINE BAR ── */
+.timeline-bar {
+  background: var(--ink);
+  padding: 0 60px 28px;
+  display: flex; gap: 0; align-items: stretch;
+}
+.tbar-seg {
+  display: flex; flex-direction: column;
+  border-top: 3px solid;
+  padding: 10px 16px 0 0;
+  flex: 1;
+  font-size: 11px;
+}
+.tbar-seg:nth-child(1) { border-color: var(--warm); }
+.tbar-seg:nth-child(2) { border-color: #888; }
+.tbar-seg:nth-child(3) { border-color: var(--teal); }
+.tbar-seg:nth-child(4) { border-color: var(--blue); }
+.tbar-seg:nth-child(5) { border-color: var(--amber); }
+.tbar-seg:nth-child(6) { border-color: #9b6bc4; }
+.tbar-label { color: rgba(255,255,255,0.5); font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+.tbar-name  { color: #fff; font-weight: 500; font-size: 12px; margin-top: 2px; }
+.tbar-dur   { color: rgba(255,255,255,0.3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* ── MAIN ── */
+main { max-width: 1060px; margin: 0 auto; padding: 0 40px 80px; }
+
+/* ── SECTION ── */
+.section {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0 40px;
+}
+.section-meta {
+  padding-top: 4px;
+  border-top: 2px solid var(--rule);
+  position: relative;
+}
+.section-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.section-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px; line-height: 0.9;
+  margin-bottom: 8px;
+}
+.time-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; font-weight: 500;
+  padding: 5px 12px; border-radius: 2px;
+  margin-bottom: 10px;
+}
+.activity-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 1px;
+  padding: 3px 9px; border-radius: 2px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.meta-note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 10px; }
+
+/* COLOR THEMES PER SECTION */
+.s1 .section-tag, .s1 .section-num { color: var(--warm); }
+.s1 .time-pill  { background: #fdeee8; color: var(--warm); border: 1px solid #f8c4ae; }
+.s1 .activity-badge { background: #fdeee8; color: var(--warm); }
+
+.s2 .section-tag, .s2 .section-num { color: #555; }
+.s2 .time-pill  { background: #f0ede8; color: #555; border: 1px solid #ccc; }
+.s2 .activity-badge { background: #f0ede8; color: #555; }
+
+.s3 .section-tag, .s3 .section-num { color: var(--teal); }
+.s3 .time-pill  { background: #e6f3f0; color: var(--teal); border: 1px solid #a8d4cc; }
+.s3 .activity-badge { background: #e6f3f0; color: var(--teal); }
+
+.s4 .section-tag, .s4 .section-num { color: var(--blue); }
+.s4 .time-pill  { background: #e8eef8; color: var(--blue); border: 1px solid #a8bee8; }
+.s4 .activity-badge { background: #e8eef8; color: var(--blue); }
+
+.s5 .section-tag, .s5 .section-num { color: var(--amber); }
+.s5 .time-pill  { background: #fdf3e6; color: var(--amber); border: 1px solid #f0c87a; }
+.s5 .activity-badge { background: #fdf3e6; color: var(--amber); }
+
+.s6 .section-tag, .s6 .section-num { color: #7a3bc4; }
+.s6 .time-pill  { background: #f2ecfb; color: #7a3bc4; border: 1px solid #c4a0e8; }
+.s6 .activity-badge { background: #f2ecfb; color: #7a3bc4; }
+
+/* ── CONTENT BODY ── */
+.section-body { border-top: 2px solid var(--rule); padding-top: 20px; }
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px; letter-spacing: 0.5px;
+  margin-bottom: 6px; line-height: 1;
+}
+.section-desc { color: var(--muted); font-size: 14px; margin-bottom: 24px; font-weight: 300; max-width: 640px; }
+
+/* ── TOPIC CARDS ── */
+.topics { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+.topic {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+.topic-left {}
+.topic-h { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.topic-p { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+.example-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.example-box {
+  background: var(--light);
+  border-left: 3px solid var(--rule);
+  padding: 10px 14px;
+  font-size: 13px; color: #3a3530;
+  line-height: 1.65; border-radius: 0 2px 2px 0;
+}
+.example-box strong { color: var(--ink); }
+.topic-dur {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--muted);
+  white-space: nowrap; padding-top: 2px;
+}
+
+/* ── DEMO / HANDS-ON STRIP ── */
+.activity-strip {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden; margin-bottom: 16px;
+}
+.activity-strip-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.activity-strip-icon { font-size: 18px; }
+.activity-strip-title { font-size: 14px; font-weight: 600; }
+.activity-strip-body { padding: 14px 18px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+.activity-strip-body ul { padding-left: 18px; }
+.activity-strip-body li { margin-bottom: 5px; }
+.activity-strip-body strong { color: var(--ink); }
+
+/* ── CODE SNIPPET ── */
+.code-snip {
+  background: #1a1812;
+  border-radius: 3px; padding: 14px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; line-height: 1.8;
+  color: #c8c0b0; margin: 12px 0;
+  overflow-x: auto;
+}
+.ck { color: #60a5fa; }
+.cs { color: #86efac; }
+.cm { color: #64748b; font-style: italic; }
+.cn { color: #fbbf24; }
+
+/* ── BREAK ── */
+.break-row {
+  margin-top: 40px;
+  display: flex; align-items: center; gap: 16px;
+  background: var(--light);
+  border: 1px dashed var(--rule);
+  border-radius: 3px;
+  padding: 14px 24px;
+}
+.break-icon { font-size: 20px; }
+.break-text { font-size: 13px; color: var(--muted); }
+.break-text strong { color: var(--ink); }
+
+/* ── TAKEAWAYS ── */
+.takeaways {
+  margin-top: 60px;
+  background: var(--ink);
+  border-radius: 4px;
+  padding: 36px 40px;
+  color: #fff;
+}
+.takeaways h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px; margin-bottom: 24px;
+  letter-spacing: 1px;
+}
+.takeaways-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.tk {
+  border-top: 2px solid rgba(255,255,255,0.15);
+  padding-top: 14px;
+}
+.tk-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; color: #f0c060;
+  line-height: 1; margin-bottom: 6px;
+}
+.tk-h { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.tk-p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink); color: rgba(255,255,255,0.3);
+  text-align: center; padding: 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 1px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+@media(max-width:700px){
+  .section { grid-template-columns: 1fr; }
+  .masthead { padding: 40px 24px 36px; }
+  .timeline-bar { padding: 0 24px 20px; flex-wrap: wrap; }
+  main { padding: 0 20px 60px; }
+  .takeaways-grid { grid-template-columns: 1fr; }
+  .topic { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-kicker">Instructor Session Plan · LLM Engineering</div>
+  <h1>Training &<br><em>Fine-tuning</em><br>LLMs</h1>
+  <div class="masthead-sub">A complete 3-hour session covering fine-tuning, dataset prep, hyperparameter optimization, evaluation metrics, and RAG — with examples and hands-on Colab exercises.</div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n">3H</div><div class="stat-l">Total Duration</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Sections</div></div>
+    <div class="stat"><div class="stat-n">5</div><div class="stat-l">Colab Exercises</div></div>
+    <div class="stat"><div class="stat-n">1</div><div class="stat-l">Break</div></div>
+  </div>
+</div>
+
+<!-- TIMELINE BAR -->
+<div class="timeline-bar">
+  <div class="tbar-seg">
+    <div class="tbar-label">00:00</div>
+    <div class="tbar-name">S1 — Fine-tuning Intro</div>
+    <div class="tbar-dur">30 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">00:30</div>
+    <div class="tbar-name">S2 — Dataset Prep</div>
+    <div class="tbar-dur">30 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">01:00</div>
+    <div class="tbar-name">☕ Break</div>
+    <div class="tbar-dur">10 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">01:10</div>
+    <div class="tbar-name">S3 — Hyperparameters</div>
+    <div class="tbar-dur">40 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">01:50</div>
+    <div class="tbar-name">S4 — Evaluation</div>
+    <div class="tbar-dur">30 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">02:20</div>
+    <div class="tbar-name">S5 — RAG</div>
+    <div class="tbar-dur">30 min</div>
+  </div>
+  <div class="tbar-seg">
+    <div class="tbar-label">02:50</div>
+    <div class="tbar-name">S6 — Hands-on Lab</div>
+    <div class="tbar-dur">70 min</div>
+  </div>
+</div>
+
+<main>
+
+<!-- ══ SECTION 1 ══ -->
+<div class="section s1">
+  <div class="section-meta">
+    <div class="section-tag">Section 01</div>
+    <div class="section-num">01</div>
+    <div class="time-pill">🕐 00:00 — 00:30</div><br>
+    <div class="activity-badge">Lecture + Demo</div>
+    <div class="meta-note">Set context before any code. Use the "generalist doctor" analogy to make fine-tuning click instantly.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Why Fine-tune? Pre-trained LLM Challenges</div>
+    <div class="section-desc">Open with the big picture — what pre-trained models can and cannot do, and why fine-tuning exists. Ground every point in a real product example.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">What is a Pre-trained LLM?</div>
+          <div class="topic-p">Explain that GPT-2, Flan-T5, LLaMA were trained on billions of tokens of internet text to learn general language. They are generalists — good at many things, great at few.</div>
+          <div class="example-tag">Real example</div>
+          <div class="example-box"><strong>Ask GPT-2 to write a recipe</strong> → it generates coherent English but random content, not a recipe format. That's a generalist problem. After fine-tuning on 1,000 recipes → it generates proper ingredient lists and instructions. Show both outputs live.</div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Generalization Limits & Task-specific Gaps</div>
+          <div class="topic-p">Pre-trained models lack domain vocabulary, task format knowledge, and domain-specific reasoning. Show failure cases clearly before showing solutions.</div>
+          <div class="example-tag">Three failure cases to show</div>
+          <div class="example-box">
+            <strong>1. Medical:</strong> Ask GPT-2 "diagnose from this symptom list" → generic health advice, not clinical reasoning<br>
+            <strong>2. Legal:</strong> Ask for a non-disclosure agreement → sounds legal but wrong clauses<br>
+            <strong>3. Code review:</strong> Ask for a Python security audit → misses common vulnerabilities
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Fine-tuning: The 3 Core Benefits</div>
+          <div class="topic-p">Task optimization, resource efficiency, and adaptability. Make the cost argument concrete — it's the most compelling reason for any team to fine-tune vs retrain.</div>
+          <div class="example-tag">Cost analogy that lands</div>
+          <div class="example-box">
+            Training GPT-3 from scratch ≈ <strong>$4.6 million, 3 months</strong><br>
+            Fine-tuning GPT-2 on your domain ≈ <strong>$20–$200, one weekend</strong><br>
+            You're borrowing 1.5B parameters of language knowledge and just teaching the top layers your domain style. Like hiring a smart new grad and giving them 2 weeks of domain training instead of putting them through a full degree.
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Transfer Learning: How Fine-tuning Works Internally</div>
+          <div class="topic-p">Briefly explain the freeze-lower-layers → adapt-upper-layers pattern. Use the image analogy (edges → shapes → objects) then bridge to text (tokens → grammar → meaning → task).</div>
+          <div class="example-tag">Visual walkthrough</div>
+          <div class="example-box">
+            <strong>Layer 1–4 (Frozen):</strong> "happy" and "joyful" are similar → general word knowledge<br>
+            <strong>Layer 5–8 (Frozen):</strong> subject-verb agreement → general grammar<br>
+            <strong>Layer 9–12 (Fine-tuned):</strong> "not happy" = negative sentiment → task-specific reasoning<br>
+            Only layers 9–12 update during fine-tuning. That's why it's 100× cheaper.
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">💬</span>
+        <span class="activity-strip-title">Quick Poll (end of section)</span>
+      </div>
+      <div class="activity-strip-body">
+        Ask the room: <strong>"Which of these would benefit most from fine-tuning vs just better prompting?"</strong><br>
+        A) Customer support chatbot &nbsp; B) General Q&A &nbsp; C) Code auto-complete for a specific framework &nbsp; D) Creative writing<br><br>
+        Answer: A and C — domain-specific tasks with consistent format. B and D are often solvable with better prompting alone.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 2 ══ -->
+<div class="section s2">
+  <div class="section-meta">
+    <div class="section-tag">Section 02</div>
+    <div class="section-num">02</div>
+    <div class="time-pill">🕐 00:30 — 01:00</div><br>
+    <div class="activity-badge">Lecture + Live Code</div>
+    <div class="meta-note">This section is often underestimated. Emphasize: data quality > model choice > hyperparameters, in that order.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Dataset Preparation & Pre-processing</div>
+    <div class="section-desc">Walk through the complete data pipeline — collection, cleaning, augmentation, tokenization — with hands-on code snippets for each step.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Why Data Quality Beats Everything Else</div>
+          <div class="topic-p">The "golden rule" of fine-tuning. A clean dataset of 1,000 examples consistently outperforms a noisy dataset of 10,000. Introduce overfitting vs underfitting with concrete scenarios.</div>
+          <div class="example-tag">Classroom example</div>
+          <div class="example-box">
+            <strong>Scenario:</strong> You're building a movie review sentiment classifier.<br>
+            <strong>Bad data:</strong> 8,000 Amazon tech reviews + 2,000 movie reviews. Model learns tech review patterns, fails on movies.<br>
+            <strong>Good data:</strong> 1,200 clean, balanced movie reviews. Model learns exactly what you need.<br>
+            Moral: <strong>domain match + cleanliness > volume</strong>.
+          </div>
+        </div>
+        <div class="topic-dur">6 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Data Cleaning in Practice</div>
+          <div class="topic-p">Show the live cleaning pipeline — removing speaker labels, collapsing whitespace, filtering short texts. Run on the DialogSum dataset so students see real output.</div>
+          <div class="example-tag">Code to run live</div>
+          <div class="example-box">
+<div class="code-snip"><span class="cm"># Before cleaning:</span>
+<span class="cs">"#Person1#: Hey! #Person2#: Hi!  How r  u?"</span>
+
+<span class="cm"># After cleaning:</span>
+<span class="cs">"Hey! Hi! How r u?"</span>
+
+<span class="cm"># Filter rule: drop if len(text) &lt; 20</span>
+text = re.sub(<span class="cs">r'#\w+#:\s*'</span>, <span class="cs">''</span>, text)
+text = re.sub(<span class="cs">r'\s+'</span>, <span class="cs">' '</span>, text)</div>
+            <strong>Ask students:</strong> "What else might you clean?" → profanity, PII, HTML tags, emojis, duplicates.
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Data Augmentation — Making More from Less</div>
+          <div class="topic-p">When you have limited labeled data, augmentation creates new training examples without losing semantic meaning. Cover text and image techniques.</div>
+          <div class="example-tag">Live text augmentation demo</div>
+          <div class="example-box">
+            <strong>Original:</strong> "The movie was amazing" → label: positive<br>
+            <strong>Synonym swap:</strong> "The film was incredible" → still positive ✓<br>
+            <strong>Back-translation:</strong> EN → FR → EN = "The film proved to be truly amazing" ✓<br>
+            <strong>Random insertion:</strong> "The really great movie was amazing" ✓<br><br>
+            1 labeled sentence → 4 training examples. With 500 originals → 2,000 training samples.
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Tokenization — From Words to Numbers</div>
+          <div class="topic-p">Explain why models work on tokens not words. Show the tokenization output live. Discuss max_length and what happens when sequences are too long.</div>
+          <div class="example-tag">Run in Colab</div>
+          <div class="example-box">
+<div class="code-snip">tokenizer = AutoTokenizer.<span class="ck">from_pretrained</span>(<span class="cs">"google/flan-t5-base"</span>)
+tokens = tokenizer(<span class="cs">"Hello, how are you?"</span>)
+<span class="cm"># Output: {'input_ids': [8774, 6, 149, 33, 25, 58, 1]}</span>
+<span class="cm"># 7 tokens for 5 words — punctuation splits!</span>
+
+<span class="cm"># Check token lengths across dataset</span>
+df[<span class="cs">'token_len'</span>] = df[<span class="cs">'text'</span>].<span class="ck">apply</span>(<span class="ck">lambda</span> x: <span class="ck">len</span>(tokenizer(x)[<span class="cs">'input_ids'</span>]))</div>
+            Show histogram: where does your data land vs max_length=512? How many samples get truncated?
+          </div>
+        </div>
+        <div class="topic-dur">10 min</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">🧪</span>
+        <span class="activity-strip-title">Mini Exercise — P1 from Colab Notebook (5 min)</span>
+      </div>
+      <div class="activity-strip-body">
+        Students run <strong>P1 Cells 1–3</strong> in the notebook:<br>
+        <ul>
+          <li>Load the DialogSum dataset</li>
+          <li>Apply the clean_text() function</li>
+          <li>Print: how many samples were removed? Why?</li>
+        </ul>
+        Debrief: share numbers across the room. Discuss: was 20-char filter too aggressive or not enough?
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BREAK -->
+<div class="break-row">
+  <span class="break-icon">☕</span>
+  <div class="break-text"><strong>10-Minute Break — 01:00 to 01:10</strong> &nbsp;·&nbsp; Keep Colab notebooks open. Remind students to enable T4 GPU (Runtime → Change runtime type → T4 GPU) for Section 3's hands-on exercise.</div>
+</div>
+
+<!-- ══ SECTION 3 ══ -->
+<div class="section s3">
+  <div class="section-meta">
+    <div class="section-tag">Section 03</div>
+    <div class="section-num">03</div>
+    <div class="time-pill">🕐 01:10 — 01:50</div><br>
+    <div class="activity-badge">Lecture + Live Experiment</div>
+    <div class="meta-note">The most technical section. Use the baking analogy first, then go into numbers. The LR experiment is the session highlight — let it run while you explain.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Hyperparameter Optimization</div>
+    <div class="section-desc">Cover the 6 key hyperparameters with intuitions, then run a live learning rate sensitivity experiment so students see theory become charts in real time.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Learning Rate — The Most Important Dial</div>
+          <div class="topic-p">How much to update weights after each batch. Too high = overshoots. Too low = never converges. The sweet spot for fine-tuning LLMs is almost always 1e-5 to 5e-5.</div>
+          <div class="example-tag">Intuition example</div>
+          <div class="example-box">
+            Imagine adjusting a thermostat to hit 22°C:<br>
+            <strong>LR = 10 (too high):</strong> You jump from 18° → 30° → 14° → 28°. Never stabilizes.<br>
+            <strong>LR = 0.001 (too low):</strong> You move 0.001° at a time. Takes forever to reach 22°.<br>
+            <strong>LR = 0.5 (just right):</strong> 18° → 20° → 21.5° → 22°. Converges smoothly.<br><br>
+            GPT-3 uses LR ≈ 6×10⁻⁵ during pre-training. Fine-tuning typically uses 5×10⁻⁵ or lower.
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Batch Size, Warm-up, Epochs & Optimizers</div>
+          <div class="topic-p">Cover the remaining 5 hyperparameters concisely with decision rules students can apply immediately.</div>
+          <div class="example-tag">Decision table</div>
+          <div class="example-box">
+            <strong>Batch size:</strong> 16–32 for fine-tuning. Smaller = noisier updates but better generalization.<br>
+            <strong>Warm-up steps:</strong> Set to 5–10% of total steps. Prevents "weight shock" at start of training.<br>
+            <strong>Epochs:</strong> 3–5 for fine-tuning. Use early stopping — stop when val loss stops improving.<br>
+            <strong>Optimizer:</strong> AdamW for 99% of cases. SGD if dataset is huge and memory is tight.<br>
+            <strong>Frozen layers:</strong> Freeze layers 1–8, fine-tune layers 9–12 for most classification tasks.
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Regularization — Preventing Overfitting</div>
+          <div class="topic-p">Dropout, weight decay, early stopping. Make the concept visceral with a concrete memorization example.</div>
+          <div class="example-tag">Memorization vs learning</div>
+          <div class="example-box">
+            <strong>Overfitting analogy:</strong> A student who memorizes last year's exact exam questions.<br>
+            They score 100% on the practice paper but fail on any new question.<br><br>
+            <strong>Dropout fix:</strong> Randomly disable 20% of neurons each training step → forces model to learn robust patterns rather than relying on specific neurons memorizing specific examples.<br>
+            <strong>Weight decay:</strong> Penalizes large weights → keeps model "humble" and generalizable.
+          </div>
+        </div>
+        <div class="topic-dur">6 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Hyperparameter Search Strategies</div>
+          <div class="topic-p">Grid search, random search, Bayesian optimization, and evolutionary strategies. When to use each and why Bayesian is the professional's choice.</div>
+          <div class="example-tag">Bayesian vs Grid — concrete contrast</div>
+          <div class="example-box">
+            <strong>Grid search:</strong> Try LR ∈ {0.1, 0.01, 0.001} × batch ∈ {8, 16, 32} = 9 experiments. Exhaustive but ignores past results.<br><br>
+            <strong>Bayesian:</strong> Run experiment 1 (LR=0.1, batch=8) → bad. Run experiment 2 (LR=0.001, batch=32) → good. Bayesian now predicts: "try LR=0.0005, batch=32 next" — learns from history like a detective narrowing suspects.<br><br>
+            <strong>Tools:</strong> Optuna (free, flexible), W&B Sweeps (visual), Ray Tune (distributed).
+          </div>
+        </div>
+        <div class="topic-dur">7 min</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">🔬</span>
+        <span class="activity-strip-title">Live Experiment — P3: LR Sensitivity (start running, discuss while it trains)</span>
+      </div>
+      <div class="activity-strip-body">
+        <strong>Start P3 Cell 2 running</strong> (4 LR experiments, ~15 min). While it trains, discuss:<br>
+        <ul>
+          <li>What do you <em>predict</em> will happen at LR=1e-3? Why?</li>
+          <li>What's the "random baseline" accuracy for binary classification? (50%)</li>
+          <li>When results come in — students plot the bar chart and explain the Goldilocks zone</li>
+        </ul>
+        <strong>Expected outcome:</strong> LR=5e-5 wins (~85–90% accuracy). LR=1e-3 is near-random. LR=1e-6 barely moves from 50%.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 4 ══ -->
+<div class="section s4">
+  <div class="section-meta">
+    <div class="section-tag">Section 04</div>
+    <div class="section-num">04</div>
+    <div class="time-pill">🕐 01:50 — 02:20</div><br>
+    <div class="activity-badge">Lecture + Calculation</div>
+    <div class="meta-note">Students often confuse BLEU and ROUGE. Do the manual calculation live — once they compute it by hand, they never forget which is which.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Evaluation Metrics — BLEU, ROUGE & Beyond</div>
+    <div class="section-desc">When output is text, accuracy doesn't apply. Cover the metrics used for generation tasks and walk through manual calculations before using the library.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Classification Metrics Recap</div>
+          <div class="topic-p">Quick 5-minute recap of Accuracy, Precision, Recall, F1 — set up the contrast with text generation metrics. The medical example makes Precision vs Recall unforgettable.</div>
+          <div class="example-tag">The Recall vs Precision tradeoff</div>
+          <div class="example-box">
+            <strong>Cancer screening:</strong> Missing a cancer case (false negative) = patient doesn't get treatment = potentially fatal.<br>
+            → Optimize for <strong>Recall</strong> (catch everything, even if some false alarms)<br><br>
+            <strong>Spam filter:</strong> Blocking a legitimate email (false positive) = user misses important message.<br>
+            → Optimize for <strong>Precision</strong> (only block if very confident it's spam)<br><br>
+            F1 = when you can't sacrifice either. Use this for most NLP classification tasks.
+          </div>
+        </div>
+        <div class="topic-dur">5 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">BLEU Score — Precision for Text Generation</div>
+          <div class="topic-p">N-gram precision: how many words/phrases in the generated text appear in the reference? Originally for translation, now used broadly. Walk through the math live.</div>
+          <div class="example-tag">Manual calculation — do this on whiteboard</div>
+          <div class="example-box">
+            <strong>Reference:</strong> "The cat sat on the mat"<br>
+            <strong>Generated:</strong> "The cat is on the mat"<br><br>
+            <strong>BLEU-1 (unigrams):</strong> Generated has 6 words. 5 appear in reference (The, cat, on, the, mat). Precision = 5/6 = <strong>0.833</strong><br>
+            <strong>BLEU-2 (bigrams):</strong> Generated bigrams: (The cat), (cat is), (is on), (on the), (the mat). Matching: (The cat), (on the), (the mat) = 3. Precision = 3/5 = <strong>0.600</strong><br>
+            <strong>Final BLEU</strong> = geometric mean of BLEU-1, 2, 3, 4 × brevity penalty
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">ROUGE Score — Recall for Summarization</div>
+          <div class="topic-p">Flip side of BLEU: how much of the reference is captured in the generated text? ROUGE-1, ROUGE-2, ROUGE-L. Used in summarization to check content coverage.</div>
+          <div class="example-tag">Same example, different lens</div>
+          <div class="example-box">
+            <strong>Reference summary:</strong> "The government announced a new climate policy"<br>
+            <strong>Generated summary:</strong> "A new government climate policy was revealed"<br><br>
+            <strong>ROUGE-1 Recall:</strong> Reference has 7 words. How many appear in generated? (government, new, climate, policy) = 4. Recall = 4/7 = <strong>0.571</strong><br>
+            <strong>ROUGE-2 Recall:</strong> Reference bigrams: (The government), (government announced), (announced a), (a new), (new climate), (climate policy). Matching in generated: (new climate), (climate policy) = 2. Recall = 2/6 = <strong>0.333</strong><br><br>
+            Key insight: <strong>BLEU = did we say the right words? ROUGE = did we cover the right information?</strong>
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Interpreting Scores & Limits of Automatic Metrics</div>
+          <div class="topic-p">What's a "good" BLEU score? When do these metrics fail? End with a discussion on why human evaluation still matters.</div>
+          <div class="example-tag">Score interpretation + failure case</div>
+          <div class="example-box">
+            <strong>BLEU thresholds (roughly):</strong> &lt;10 = very poor, 10–20 = decent, 20–40 = good, 40+ = near-human<br>
+            <strong>ROUGE-1 thresholds:</strong> &lt;0.3 = poor, 0.3–0.5 = decent, 0.5+ = good<br><br>
+            <strong>When metrics lie:</strong><br>
+            Reference: "The dog bit the man." Generated: "The man bit the dog." → BLEU=0.8, ROUGE=0.8. But the meaning is completely reversed!<br>
+            → Why human eval, BERTScore, and BLEURT were developed.
+          </div>
+        </div>
+        <div class="topic-dur">9 min</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">🧮</span>
+        <span class="activity-strip-title">Exercise — P4 Manual BLEU Calculation (in notebook)</span>
+      </div>
+      <div class="activity-strip-body">
+        Students run <strong>P4 Cell 1</strong> — manual BLEU calculation in Python without any libraries.<br>
+        <ul>
+          <li>Compute BLEU-1, BLEU-2, BLEU-3 for their own sentence pair</li>
+          <li>Then run P4 Cells 2–3 to auto-compute with HuggingFace <code>evaluate</code></li>
+          <li>Verify their manual calculation matches the library output</li>
+        </ul>
+        Debrief: which ROUGE variant dropped most? (ROUGE-2 always drops fastest — why?)
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 5 ══ -->
+<div class="section s5">
+  <div class="section-meta">
+    <div class="section-tag">Section 05</div>
+    <div class="section-num">05</div>
+    <div class="time-pill">🕐 02:20 — 02:50</div><br>
+    <div class="activity-badge">Lecture + Architecture Demo</div>
+    <div class="meta-note">RAG is the most "wow" moment of the session. Lead with the open-book exam analogy, then build the pipeline step by step. Save the live demo for the end.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Retrieval-Augmented Generation (RAG)</div>
+    <div class="section-desc">Fine-tuning teaches skills. RAG provides knowledge. Together they form the backbone of most production AI applications today. Walk the pipeline end-to-end with a real example.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">The Problem RAG Solves</div>
+          <div class="topic-p">LLMs have three critical weaknesses in enterprise use: knowledge cutoff, hallucination, and no access to private data. RAG solves all three without retraining.</div>
+          <div class="example-tag">Three failure modes — ask the class these questions live</div>
+          <div class="example-box">
+            <strong>Q1: "What happened in the news yesterday?"</strong><br>
+            → Any LLM: fails (training cutoff). RAG with news feed: succeeds ✓<br><br>
+            <strong>Q2: "What does our company's Q3 2024 report say about revenue?"</strong><br>
+            → Any LLM: hallucinated answer. RAG with your PDF: exact answer with citation ✓<br><br>
+            <strong>Q3: "Summarize the meeting notes from last Tuesday."</strong><br>
+            → Any LLM: "I don't have access to your meeting notes." RAG: retrieves and summarizes ✓
+          </div>
+        </div>
+        <div class="topic-dur">6 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">The RAG Pipeline — 4 Steps</div>
+          <div class="topic-p">Walk through each step with the AI companies knowledge base as a running example. Make the embedding concept concrete with coordinates.</div>
+          <div class="example-tag">Step-by-step with real query</div>
+          <div class="example-box">
+            <strong>Query:</strong> "When was ChatGPT launched and how fast did it grow?"<br><br>
+            <strong>Step 1 — Embed query:</strong> Convert to 384-dim vector: [0.23, -0.18, 0.71, ...]<br>
+            <strong>Step 2 — Search FAISS:</strong> Find top-3 document vectors closest in space → returns OpenAI documents<br>
+            <strong>Step 3 — Augment prompt:</strong> "Based on: [ChatGPT was launched Nov 2022, reached 100M users in 2 months...] Answer: When was ChatGPT launched?"<br>
+            <strong>Step 4 — Generate:</strong> Flan-T5 reads the context and produces a grounded, accurate answer
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Vector Embeddings & FAISS — The Core Machinery</div>
+          <div class="topic-p">Why do we need vectors? Show how semantic similarity works differently from keyword search. FAISS makes it fast at scale.</div>
+          <div class="example-tag">Keyword search vs semantic search</div>
+          <div class="example-box">
+            <strong>Query:</strong> "How many users does ChatGPT have?"<br><br>
+            <strong>Keyword search (TF-IDF):</strong> Looks for documents containing "ChatGPT" AND "users". Fails if document says "reached 100 million people" (no word "users").<br><br>
+            <strong>Semantic search (FAISS):</strong> Compares the <em>meaning</em> of the query against all documents. "100 million people" is semantically close to "users" → retrieved correctly.<br><br>
+            FAISS searches 1 million vectors in &lt;1ms. That's what makes RAG practical in production.
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Fine-tuning + RAG Together — Production Formula</div>
+          <div class="topic-p">Neither alone is sufficient. The combination gives you style + knowledge — the gold standard architecture.</div>
+          <div class="example-tag">GitHub Copilot as real-world example</div>
+          <div class="example-box">
+            <strong>Fine-tuning contribution:</strong> Codex (fine-tuned on GitHub code) knows how to write idiomatic Python, follows coding conventions, understands function signatures.<br><br>
+            <strong>RAG contribution:</strong> When you're working in a specific codebase, Copilot retrieves your existing functions, class definitions, and variable names from the open files — it's doing real-time retrieval over your local context.<br><br>
+            Result: code suggestions that match <em>both</em> general Python style <em>and</em> your specific project's patterns.
+          </div>
+        </div>
+        <div class="topic-dur">8 min</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">🔍</span>
+        <span class="activity-strip-title">Live Demo — P5 Retriever Test (Cells 1–3)</span>
+      </div>
+      <div class="activity-strip-body">
+        Run <strong>P5 Cells 1–3</strong> together: build the FAISS index, then test the retriever with 3 queries.<br>
+        <ul>
+          <li>Query: "What models does OpenAI make?" → should retrieve GPT-3, GPT-4, DALL-E docs</li>
+          <li>Query: "What is Azure used for?" → should retrieve Microsoft Azure docs</li>
+          <li>Ask a student to type any question → class guesses which documents will be retrieved before running</li>
+        </ul>
+        <strong>Key discussion:</strong> What happens if the answer isn't in the knowledge base? The model should say "I don't know" — show what actually happens (it may hallucinate). This is why RAG needs a "no relevant context found" guard.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 6 ══ -->
+<div class="section s6">
+  <div class="section-meta">
+    <div class="section-tag">Section 06</div>
+    <div class="section-num">06</div>
+    <div class="time-pill">🕐 02:50 — 03:00+</div><br>
+    <div class="activity-badge">Hands-on Lab</div>
+    <div class="meta-note">The practical capstone. Students work through the full notebook end-to-end. Circulate and help with GPU issues, shape errors, and interpretation questions.</div>
+  </div>
+  <div class="section-body">
+    <div class="section-title">Hands-on Lab — Full Pipeline in Colab</div>
+    <div class="section-desc">Students complete the full 5-problem Colab notebook, connecting every concept from the session into a working end-to-end LLM pipeline.</div>
+
+    <div class="topics">
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Lab Structure & Time Allocation</div>
+          <div class="topic-p">Students have the complete notebook. They should aim to complete P1 + P4 in session (no GPU needed), and run P2 or P3 in background while they work on others.</div>
+          <div class="example-tag">Recommended lab sequence</div>
+          <div class="example-box">
+            <strong>Must complete (no GPU):</strong><br>
+            P1 — Dataset Prep (10 min) → P4 — BLEU/ROUGE (10 min) → P5 Cells 1–5 — RAG (15 min)<br><br>
+            <strong>Start in background (GPU):</strong><br>
+            P2 — GPT-2 fine-tuning (~45 min to train, runs unattended)<br>
+            P3 — LR experiment (~20 min, already run during lecture)<br><br>
+            <strong>Fast finishers:</strong> Stretch challenges in each problem. Try adding a new document to the RAG knowledge base and testing it.
+          </div>
+        </div>
+        <div class="topic-dur">Ongoing</div>
+      </div>
+
+      <div class="topic">
+        <div class="topic-left">
+          <div class="topic-h">Common Issues & How to Fix Them</div>
+          <div class="topic-p">Pre-empt the most common Colab errors so you can circulate instead of firefighting the same GPU issue 15 times.</div>
+          <div class="example-tag">Top 5 issues + fixes</div>
+          <div class="example-box">
+            <strong>1. "CUDA out of memory"</strong> → Runtime → Disconnect and delete runtime → reconnect → reduce batch_size to 2<br>
+            <strong>2. "No GPU detected"</strong> → Runtime → Change runtime type → T4 GPU (must do before running!)<br>
+            <strong>3. Dataset not found</strong> → Check spelling: "knkarthick/dialogsum" (lowercase k)<br>
+            <strong>4. Loss is NaN from step 1</strong> → Learning rate too high, try 1e-5<br>
+            <strong>5. ROUGE score = 0</strong> → predictions list is empty — check the for-loop ran fully
+          </div>
+        </div>
+        <div class="topic-dur">Reference</div>
+      </div>
+
+    </div>
+
+    <div class="activity-strip">
+      <div class="activity-strip-header">
+        <span class="activity-strip-icon">🎯</span>
+        <span class="activity-strip-title">Session Wrap-up — Debrief Questions (last 5 min)</span>
+      </div>
+      <div class="activity-strip-body">
+        Close the session with these discussion questions:<br>
+        <ul>
+          <li><strong>"For your current project/role, would fine-tuning or RAG give more value first?"</strong> (no wrong answer — discuss tradeoffs)</li>
+          <li><strong>"What dataset would you use if you had to fine-tune a model for your team's use case?"</strong></li>
+          <li><strong>"What metric would you use to evaluate it — and why not just accuracy?"</strong></li>
+        </ul>
+        Homework suggestion: Complete P2 (GPT-2 fine-tuning) and record the before/after generated text. Share in the group channel.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAKEAWAYS -->
+<div class="takeaways">
+  <h2>Session Takeaways</h2>
+  <div class="takeaways-grid">
+    <div class="tk">
+      <div class="tk-num">01</div>
+      <div class="tk-h">Data > Model > Hyperparameters</div>
+      <div class="tk-p">Clean, domain-matched data at 1,000 examples beats noisy data at 10,000 every time. Invest here first.</div>
+    </div>
+    <div class="tk">
+      <div class="tk-num">02</div>
+      <div class="tk-h">LR=5e-5 is the default start</div>
+      <div class="tk-p">For fine-tuning any transformer, start at 5e-5 with warmup. Adjust from there based on validation loss.</div>
+    </div>
+    <div class="tk">
+      <div class="tk-num">03</div>
+      <div class="tk-h">BLEU = precision, ROUGE = recall</div>
+      <div class="tk-p">Use BLEU for translation tasks, ROUGE for summarization. Always pair quantitative scores with qualitative examples.</div>
+    </div>
+    <div class="tk">
+      <div class="tk-num">04</div>
+      <div class="tk-h">RAG for knowledge, Fine-tuning for style</div>
+      <div class="tk-p">Don't choose — combine them. Fine-tune for domain format + RAG for live factual grounding = production-ready AI.</div>
+    </div>
+    <div class="tk">
+      <div class="tk-num">05</div>
+      <div class="tk-h">Freeze lower layers, tune upper layers</div>
+      <div class="tk-p">Lower layers capture universal language patterns. Upper layers are task-specific. Fine-tuning cost comes from updating only the upper ~30% of parameters.</div>
+    </div>
+    <div class="tk">
+      <div class="tk-num">06</div>
+      <div class="tk-h">FAISS = semantic Google for your docs</div>
+      <div class="tk-p">Vector similarity search finds the <em>meaning</em>-closest documents, not just keyword matches. This is what makes RAG far superior to simple search.</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>Training &amp; Fine-tuning LLMs — 3-Hour Session Plan &nbsp;·&nbsp; All Colab exercises in LLM_Finetuning_Practice.ipynb</footer>
+
+</body>
+</html>

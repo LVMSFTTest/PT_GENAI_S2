@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Fine-tuning — Practice Problems (Colab-Ready)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: #2a3348;
+    --accent: #f97316;
+    --accent2: #22d3a0;
+    --accent3: #60a5fa;
+    --accent4: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #0d1117;
+    --green: #22d3a0;
+    --yellow: #fbbf24;
+    --red: #f87171;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sora',sans-serif; background:var(--bg); color:var(--text); font-size:15px; line-height:1.75; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0e1117 0%, #1a1f35 50%, #0e1117 100%);
+    padding: 64px 48px 56px;
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.3;
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 800px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 4px; padding: 5px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 52px); font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 16px; font-weight: 300; max-width: 600px; margin-bottom: 28px; }
+  .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+  .stat { text-align: left; }
+  .stat-val { font-size: 24px; font-weight: 700; color: var(--accent2); font-family:'JetBrains Mono',monospace; }
+  .stat-lbl { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+  /* NAV */
+  .nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 48px; display: flex; overflow-x: auto; gap: 0; }
+  .nav a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px; font-size: 13px; font-weight: 500;
+    color: var(--muted); text-decoration: none; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .nav a:hover { color: var(--text); border-color: var(--border); }
+  .nav a.active { color: var(--accent); border-color: var(--accent); }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 0 32px 80px; }
+
+  /* PROBLEM SECTION */
+  .problem-section { margin-top: 64px; }
+  .problem-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .problem-num {
+    background: var(--accent); color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    padding: 6px 14px; border-radius: 4px; white-space: nowrap;
+    margin-top: 4px;
+  }
+  .problem-num.p2 { background: var(--accent2); color: var(--bg); }
+  .problem-num.p3 { background: var(--accent3); color: var(--bg); }
+  .problem-num.p4 { background: var(--accent4); color: var(--bg); }
+  .problem-num.p5 { background: var(--yellow); color: var(--bg); }
+  .problem-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .problem-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 3px 10px; border-radius: 3px; letter-spacing: 1px;
+  }
+  .badge-easy { background: rgba(34,211,160,0.1); color: var(--green); border: 1px solid rgba(34,211,160,0.25); }
+  .badge-medium { background: rgba(251,191,36,0.1); color: var(--yellow); border: 1px solid rgba(251,191,36,0.25); }
+  .badge-hard { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+  .badge-time { background: rgba(96,165,250,0.1); color: var(--accent3); border: 1px solid rgba(96,165,250,0.25); }
+  .badge-topic { background: rgba(167,139,250,0.1); color: var(--accent4); border: 1px solid rgba(167,139,250,0.25); }
+
+  /* OBJECTIVE BOX */
+  .objective {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 20px 24px; margin-bottom: 24px;
+  }
+  .objective-label {
+    font-family:'JetBrains Mono',monospace; font-size:10px;
+    letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;
+  }
+  .objective ul { padding-left: 20px; }
+  .objective li { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+
+  /* COLAB LINK */
+  .colab-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent); color: white;
+    padding: 12px 24px; border-radius: 6px;
+    font-weight: 600; font-size: 14px; text-decoration: none;
+    transition: opacity 0.2s; margin: 16px 0;
+  }
+  .colab-btn:hover { opacity: 0.9; }
+  .colab-btn svg { width: 18px; height: 18px; }
+
+  /* CODE BLOCK */
+  .code-wrap { position: relative; margin: 20px 0; }
+  .code-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-bottom: none; border-radius: 6px 6px 0 0;
+    padding: 10px 16px;
+  }
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+  .copy-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 12px; border-radius: 3px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent3); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px; padding: 20px;
+    overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; line-height: 1.8;
+  }
+  .c { color: #4a5568; font-style: italic; }
+  .k { color: #60a5fa; }
+  .s { color: #86efac; }
+  .n { color: #fbbf24; }
+  .v { color: #f0abfc; }
+  .fn { color: #22d3a0; }
+
+  /* STEPS */
+  .steps { counter-reset: step; margin: 24px 0; }
+  .step {
+    display: flex; gap: 16px; margin-bottom: 20px;
+    padding: 16px 20px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .step-n {
+    background: var(--border); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    width: 28px; height: 28px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+  .step-body p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* QUIZ */
+  .quiz { margin: 28px 0; }
+  .quiz-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; color: var(--accent4); text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .quiz-q {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 20px 24px; margin-bottom: 12px;
+  }
+  .quiz-q p { font-size: 14px; margin-bottom: 14px; font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 10px 14px;
+    cursor: pointer; transition: all 0.2s; font-size: 13px;
+  }
+  .opt:hover { border-color: var(--accent3); color: var(--accent3); }
+  .opt.correct { background: rgba(34,211,160,0.08); border-color: var(--green); color: var(--green); }
+  .opt.wrong { background: rgba(248,113,113,0.08); border-color: var(--red); color: var(--red); }
+  .opt-key {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: var(--border); padding: 2px 7px; border-radius: 3px; flex-shrink: 0;
+  }
+  .feedback {
+    display: none; margin-top: 12px; padding: 12px 16px;
+    border-radius: 4px; font-size: 13px; line-height: 1.6;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: rgba(34,211,160,0.08); border: 1px solid rgba(34,211,160,0.2); color: #86efac; }
+  .feedback.no { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: #fca5a5; }
+
+  /* EXPECTED OUTPUT */
+  .expected {
+    background: rgba(34,211,160,0.05); border: 1px solid rgba(34,211,160,0.2);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .expected-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--green); text-transform:uppercase; margin-bottom:8px; }
+  .expected p, .expected li { font-size: 13px; color: #86efac; }
+  .expected ul { padding-left: 16px; }
+
+  /* CHALLENGE */
+  .challenge {
+    background: rgba(249,115,22,0.05); border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 6px; padding: 16px 20px; margin: 16px 0;
+  }
+  .challenge-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:8px; }
+  .challenge p { font-size: 13px; color: #fdba74; line-height: 1.7; }
+
+  /* DIVIDER */
+  .section-div { border: none; border-top: 1px solid var(--border); margin: 60px 0 0; }
+
+  p { margin-bottom: 12px; color: var(--muted); font-size: 14px; line-height: 1.75; }
+  strong { color: var(--text); }
+  h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 24px 0 10px; }
+
+  footer { background: var(--surface); border-top: 1px solid var(--border); text-align: center; padding: 28px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  @media(max-width:640px) { .hero { padding: 40px 20px; } main { padding: 0 16px 60px; } .nav { padding: 0 16px; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Google Colab Practice Session
+    </div>
+    <h1>LLM Fine-tuning<br><span>Practice Problems</span></h1>
+    <p>5 hands-on exercises, each with complete runnable code, MCQ checkpoints, and stretch challenges. Open any notebook directly in Google Colab.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">5</div><div class="stat-lbl">Exercises</div></div>
+      <div class="stat"><div class="stat-val">~3h</div><div class="stat-lbl">Total Time</div></div>
+      <div class="stat"><div class="stat-val">Free</div><div class="stat-lbl">Colab GPU</div></div>
+    </div>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="#p1" class="active"><span class="nav-dot" style="background:var(--accent)"></span>P1 — Dataset Prep</a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--accent2)"></span>P2 — Fine-tune GPT-2</a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--accent3)"></span>P3 — Hyperparameters</a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--accent4)"></span>P4 — BLEU & ROUGE</a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--yellow)"></span>P5 — RAG Pipeline</a>
+</nav>
+
+<main>
+
+<!-- ===== PROBLEM 1 ===== -->
+<section class="problem-section" id="p1">
+  <div class="problem-header">
+    <div class="problem-num">P1</div>
+    <div>
+      <div class="problem-title">Dataset Preparation & Pre-processing</div>
+      <div class="problem-meta">
+        <span class="badge badge-easy">EASY</span>
+        <span class="badge badge-time">⏱ 30 min</span>
+        <span class="badge badge-topic">Dataset Prep</span>
+        <span class="badge badge-topic">Tokenization</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="objective">
+    <div class="objective-label">What you'll learn</div>
+    <ul>
+      <li>Load and inspect a real HuggingFace dataset</li>
+      <li>Clean, filter and normalize text data</li>
+      <li>Tokenize text for a transformer model</li>
+      <li>Visualize token length distribution</li>
+    </ul>
+  </div>
+
+  <p>Before any model training happens, your data needs to be in shape. In this exercise you'll take a raw dialogue dataset, clean it up, and prepare it for fine-tuning — the same pipeline used in production NLP systems.</p>
+
+  <a class="colab-btn" href="https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    Open in Google Colab — Exercise 1
+  </a>
+
+  <h3>Complete Runnable Code</h3>
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">PYTHON — Copy & paste into a new Colab notebook</span>
+      <button class="copy-btn" onclick="copyCode(this, 'code1')">Copy</button>
+    </div>
+    <pre id="code1"><span class="c"># ============================================================
+# PRACTICE PROBLEM 1: Dataset Preparation & Pre-processing
+# Dataset: knkarthick/dialogsum (dialogue summarization)
+# ============================================================</span>
+
+<span class="c"># CELL 1 — Install & import</span>
+<span class="fn">!</span>pip install datasets transformers matplotlib wordcloud -q
+
+<span class="k">from</span> datasets <span class="k">import</span> load_dataset
+<span class="k">from</span> transformers <span class="k">import</span> AutoTokenizer
+<span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+<span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">import</span> re, collections
+
+<span class="c"># CELL 2 — Load dataset</span>
+dataset = <span class="fn">load_dataset</span>(<span class="s">"knkarthick/dialogsum"</span>)
+<span class="fn">print</span>(dataset)
+<span class="fn">print</span>(<span class="s">"\n--- Sample entry ---"</span>)
+<span class="fn">print</span>(dataset[<span class="s">"train"</span>][<span class="n">0</span>])
+
+<span class="c"># CELL 3 — Explore the data</span>
+df = dataset[<span class="s">"train"</span>].<span class="fn">to_pandas</span>()
+<span class="fn">print</span>(<span class="s">f"Training samples: {len(df)}"</span>)
+<span class="fn">print</span>(<span class="s">f"Columns: {df.columns.tolist()}"</span>)
+<span class="fn">print</span>(df.<span class="fn">head</span>(<span class="n">3</span>))
+
+<span class="c"># CELL 4 — Data cleaning function</span>
+<span class="k">def</span> <span class="fn">clean_text</span>(text):
+    text = text.<span class="fn">strip</span>()
+    <span class="c"># Remove speaker labels like "#Person1#:"</span>
+    text = re.<span class="fn">sub</span>(<span class="s">r'#\w+#:\s*'</span>, <span class="s">''</span>, text)
+    <span class="c"># Collapse multiple spaces/newlines</span>
+    text = re.<span class="fn">sub</span>(<span class="s">r'\s+'</span>, <span class="s">' '</span>, text)
+    <span class="c"># Remove very short dialogues (less than 20 chars)</span>
+    <span class="k">return</span> text <span class="k">if</span> <span class="fn">len</span>(text) > <span class="n">20</span> <span class="k">else</span> <span class="v">None</span>
+
+df[<span class="s">'clean_dialogue'</span>] = df[<span class="s">'dialogue'</span>].<span class="fn">apply</span>(clean_text)
+df[<span class="s">'clean_summary'</span>]  = df[<span class="s">'summary'</span>].<span class="fn">apply</span>(clean_text)
+
+<span class="c"># Drop rows where cleaning returned None</span>
+df = df.<span class="fn">dropna</span>(subset=[<span class="s">'clean_dialogue'</span>, <span class="s">'clean_summary'</span>])
+<span class="fn">print</span>(<span class="s">f"After cleaning: {len(df)} samples"</span>)
+
+<span class="c"># CELL 5 — Tokenize with Flan-T5 tokenizer</span>
+tokenizer = AutoTokenizer.<span class="fn">from_pretrained</span>(<span class="s">"google/flan-t5-base"</span>)
+
+<span class="k">def</span> <span class="fn">tokenize_example</span>(row):
+    prompt   = <span class="s">f"Summarize this dialogue:\n{row['clean_dialogue']}"</span>
+    response = row[<span class="s">'clean_summary'</span>]
+    input_tokens  = <span class="fn">tokenizer</span>(prompt,   truncation=<span class="v">True</span>, max_length=<span class="n">512</span>)
+    output_tokens = <span class="fn">tokenizer</span>(response, truncation=<span class="v">True</span>, max_length=<span class="n">128</span>)
+    <span class="k">return</span> {
+        <span class="s">'input_len'</span> : <span class="fn">len</span>(input_tokens[<span class="s">'input_ids'</span>]),
+        <span class="s">'output_len'</span>: <span class="fn">len</span>(output_tokens[<span class="s">'input_ids'</span>])
+    }
+
+df[[<span class="s">'input_len'</span>, <span class="s">'output_len'</span>]] = df.<span class="fn">apply</span>(tokenize_example, axis=<span class="n">1</span>, result_type=<span class="s">'expand'</span>)
+
+<span class="c"># CELL 6 — Visualize token lengths</span>
+fig, axes = plt.<span class="fn">subplots</span>(<span class="n">1</span>, <span class="n">2</span>, figsize=(<span class="n">12</span>, <span class="n">4</span>))
+axes[<span class="n">0</span>].<span class="fn">hist</span>(df[<span class="s">'input_len'</span>], bins=<span class="n">40</span>, color=<span class="s">'steelblue'</span>, edgecolor=<span class="s">'white'</span>)
+axes[<span class="n">0</span>].<span class="fn">set_title</span>(<span class="s">'Dialogue Token Length Distribution'</span>)
+axes[<span class="n">0</span>].<span class="fn">set_xlabel</span>(<span class="s">'Tokens'</span>)
+axes[<span class="n">1</span>].<span class="fn">hist</span>(df[<span class="s">'output_len'</span>], bins=<span class="n">40</span>, color=<span class="s">'tomato'</span>, edgecolor=<span class="s">'white'</span>)
+axes[<span class="n">1</span>].<span class="fn">set_title</span>(<span class="s">'Summary Token Length Distribution'</span>)
+axes[<span class="n">1</span>].<span class="fn">set_xlabel</span>(<span class="s">'Tokens'</span>)
+plt.<span class="fn">tight_layout</span>()
+plt.<span class="fn">show</span>()
+
+<span class="fn">print</span>(<span class="s">f"\nMean input tokens : {df['input_len'].mean():.1f}"</span>)
+<span class="fn">print</span>(<span class="s">f"Mean output tokens: {df['output_len'].mean():.1f}"</span>)
+<span class="fn">print</span>(<span class="s">f"Max input tokens  : {df['input_len'].max()}"</span>)</pre>
+  </div>
+
+  <div class="expected">
+    <div class="expected-label">Expected Output</div>
+    <ul>
+      <li>Dataset info: ~14,400 training samples with columns: id, dialogue, summary, topic</li>
+      <li>After cleaning: ~14,350+ samples retained</li>
+      <li>Two histograms showing token distributions</li>
+      <li>Mean input ~130 tokens, mean output ~30 tokens</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <div class="challenge-label">🔥 Stretch Challenge</div>
+    <p>Add a data augmentation step: for each dialogue, use the <code>nltk</code> library to replace 2 random words with synonyms from WordNet. Print the original and augmented version side by side. How many unique training examples can you generate?</p>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-title">✦ Knowledge Check — Problem 1</div>
+    <div class="quiz-q" id="q1">
+      <p>You have 1,000 training samples. After tokenizing, you notice 15% have more than 512 tokens. What is the best strategy?</p>
+      <div class="options">
+        <div class="opt" onclick="answer(this,'q1','A')"><span class="opt-key">A</span> Delete all samples over 512 tokens</div>
+        <div class="opt" onclick="answer(this,'q1','B')"><span class="opt-key">B</span> Use truncation=True to cut at 512 and keep all samples</div>
+        <div class="opt" onclick="answer(this,'q1','C')"><span class="opt-key">C</span> Increase max_length to 2048 for all samples</div>
+        <div class="opt" onclick="answer(this,'q1','D')"><span class="opt-key">D</span> Split long samples into chunks, treating each as a separate training example</div>
+      </div>
+      <div class="feedback" id="q1-fb"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-div">
+
+<!-- ===== PROBLEM 2 ===== -->
+<section class="problem-section" id="p2">
+  <div class="problem-header">
+    <div class="problem-num p2">P2</div>
+    <div>
+      <div class="problem-title">Fine-tune GPT-2 on Indian Food Recipes</div>
+      <div class="problem-meta">
+        <span class="badge badge-medium">MEDIUM</span>
+        <span class="badge badge-time">⏱ 60 min</span>
+        <span class="badge badge-topic">Fine-tuning</span>
+        <span class="badge badge-topic">GPT-2</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="objective">
+    <div class="objective-label">What you'll learn</div>
+    <ul>
+      <li>Fine-tune GPT-2 on a custom domain dataset</li>
+      <li>Set up a Trainer with custom hyperparameters</li>
+      <li>Generate text from the fine-tuned model</li>
+      <li>Compare outputs: base GPT-2 vs fine-tuned</li>
+    </ul>
+  </div>
+
+  <p>You'll take GPT-2 — a model that knows nothing about Indian cuisine — and fine-tune it on a recipe dataset. After training, it should generate recipe-like text when prompted with an ingredient name.</p>
+
+  <a class="colab-btn" href="https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    Open in Google Colab — Exercise 2
+  </a>
+
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><div class="step-body"><h4>Enable GPU in Colab</h4><p>Runtime → Change runtime type → T4 GPU. This exercise won't complete in reasonable time on CPU.</p></div></div>
+    <div class="step"><div class="step-n">2</div><div class="step-body"><h4>Run all cells in order</h4><p>Each cell builds on the previous. Don't skip the data preparation cells even if they seem trivial.</p></div></div>
+    <div class="step"><div class="step-n">3</div><div class="step-body"><h4>Observe the loss curve</h4><p>Training loss should decrease each epoch. If it plateaus immediately, your learning rate may be too low.</p></div></div>
+    <div class="step"><div class="step-n">4</div><div class="step-body"><h4>Compare before vs after</h4><p>The most important cell is the comparison — see how much the model's output style changes after fine-tuning.</p></div></div>
+  </div>
+
+  <h3>Complete Runnable Code</h3>
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">PYTHON — Requires T4 GPU in Colab (~45 min runtime)</span>
+      <button class="copy-btn" onclick="copyCode(this, 'code2')">Copy</button>
+    </div>
+    <pre id="code2"><span class="c"># ============================================================
+# PRACTICE PROBLEM 2: Fine-tune GPT-2 on Indian Food Recipes
+# Runtime: ~45 min on Colab T4 GPU
+# ============================================================</span>
+
+<span class="c"># CELL 1 — Setup</span>
+<span class="fn">!</span>pip install transformers datasets accelerate -q
+
+<span class="k">from</span> transformers <span class="k">import</span> (
+    GPT2LMHeadModel, GPT2Tokenizer,
+    TextDataset, DataCollatorForLanguageModeling,
+    Trainer, TrainingArguments
+)
+<span class="k">from</span> datasets <span class="k">import</span> load_dataset
+<span class="k">import</span> torch, textwrap
+
+<span class="fn">print</span>(<span class="s">f"GPU available: {torch.cuda.is_available()}"</span>)
+<span class="fn">print</span>(<span class="s">f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None'}"</span>)
+
+<span class="c"># CELL 2 — Load tokenizer and base model</span>
+model_name = <span class="s">"gpt2"</span>
+tokenizer = GPT2Tokenizer.<span class="fn">from_pretrained</span>(model_name)
+tokenizer.pad_token = tokenizer.eos_token   <span class="c"># GPT2 has no pad token</span>
+
+<span class="c"># CELL 3 — Load & prepare recipe dataset</span>
+<span class="c"># Using a small recipe text dataset from HuggingFace Hub</span>
+dataset = <span class="fn">load_dataset</span>(<span class="s">"Hieu-Pham/indian_food_recipes"</span>, split=<span class="s">"train"</span>)
+<span class="fn">print</span>(<span class="s">f"Recipes loaded: {len(dataset)}"</span>)
+<span class="fn">print</span>(dataset[<span class="n">0</span>])
+
+<span class="c"># Format each recipe into a clean prompt string</span>
+<span class="k">def</span> <span class="fn">format_recipe</span>(example):
+    text = (
+        <span class="s">f"Recipe: {example.get('name','')}\n"</span>
+        <span class="s">f"Ingredients: {example.get('ingredients','')}\n"</span>
+        <span class="s">f"Instructions: {example.get('instructions','')}\n"</span>
+        <span class="s">f"&lt;|endoftext|&gt;"</span>
+    )
+    <span class="k">return</span> {<span class="s">"text"</span>: text}
+
+dataset = dataset.<span class="fn">map</span>(format_recipe)
+
+<span class="c"># Save to text file (TextDataset expects a file)</span>
+<span class="k">with</span> <span class="fn">open</span>(<span class="s">"recipes.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> f:
+    <span class="k">for</span> item <span class="k">in</span> dataset:
+        f.<span class="fn">write</span>(item[<span class="s">"text"</span>] + <span class="s">"\n"</span>)
+<span class="fn">print</span>(<span class="s">"Saved recipes.txt"</span>)
+
+<span class="c"># CELL 4 — Create token dataset</span>
+train_dataset = <span class="fn">TextDataset</span>(
+    tokenizer   = tokenizer,
+    file_path   = <span class="s">"recipes.txt"</span>,
+    block_size  = <span class="n">256</span>
+)
+data_collator = <span class="fn">DataCollatorForLanguageModeling</span>(
+    tokenizer = tokenizer,
+    mlm       = <span class="v">False</span>   <span class="c"># GPT2 uses causal LM, not masked LM</span>
+)
+<span class="fn">print</span>(<span class="s">f"Training blocks: {len(train_dataset)}"</span>)
+
+<span class="c"># CELL 5 — BEFORE fine-tuning: see what base GPT-2 generates</span>
+base_model = GPT2LMHeadModel.<span class="fn">from_pretrained</span>(model_name)
+<span class="k">def</span> <span class="fn">generate</span>(model, prompt, max_new_tokens=<span class="n">100</span>):
+    inputs = <span class="fn">tokenizer</span>(prompt, return_tensors=<span class="s">"pt"</span>)
+    <span class="k">with</span> torch.no_grad():
+        output = model.<span class="fn">generate</span>(
+            **inputs, max_new_tokens=max_new_tokens,
+            do_sample=<span class="v">True</span>, temperature=<span class="n">0.8</span>, pad_token_id=tokenizer.eos_token_id
+        )
+    <span class="k">return</span> <span class="fn">textwrap</span>.<span class="fn">fill</span>(tokenizer.<span class="fn">decode</span>(output[<span class="n">0</span>], skip_special_tokens=<span class="v">True</span>), <span class="n">80</span>)
+
+prompt = <span class="s">"Recipe: Butter Chicken\nIngredients:"</span>
+<span class="fn">print</span>(<span class="s">"=== BASE GPT-2 (before fine-tuning) ==="</span>)
+<span class="fn">print</span>(<span class="fn">generate</span>(base_model, prompt))
+
+<span class="c"># CELL 6 — Fine-tune!</span>
+training_args = <span class="fn">TrainingArguments</span>(
+    output_dir              = <span class="s">"./gpt2-recipes"</span>,
+    num_train_epochs        = <span class="n">3</span>,           <span class="c"># Try 5 for better results</span>
+    per_device_train_batch_size = <span class="n">4</span>,
+    save_steps              = <span class="n">500</span>,
+    save_total_limit        = <span class="n">1</span>,
+    logging_steps           = <span class="n">50</span>,
+    learning_rate           = <span class="n">5e-5</span>,        <span class="c"># Standard for fine-tuning</span>
+    warmup_steps            = <span class="n">100</span>,
+    prediction_loss_only    = <span class="v">True</span>,
+    fp16                    = torch.cuda.<span class="fn">is_available</span>(),  <span class="c"># Mixed precision on GPU</span>
+)
+
+ft_model = GPT2LMHeadModel.<span class="fn">from_pretrained</span>(model_name)
+trainer = <span class="fn">Trainer</span>(
+    model           = ft_model,
+    args            = training_args,
+    data_collator   = data_collator,
+    train_dataset   = train_dataset,
+)
+trainer.<span class="fn">train</span>()
+<span class="fn">print</span>(<span class="s">"✅ Fine-tuning complete!"</span>)
+
+<span class="c"># CELL 7 — AFTER fine-tuning: see what changed</span>
+<span class="fn">print</span>(<span class="s">"\n=== FINE-TUNED GPT-2 (after training on recipes) ==="</span>)
+<span class="fn">print</span>(<span class="fn">generate</span>(ft_model, prompt))
+
+<span class="c"># Try different prompts!</span>
+<span class="k">for</span> dish <span class="k">in</span> [<span class="s">"Biryani"</span>, <span class="s">"Samosa"</span>, <span class="s">"Dal Makhani"</span>]:
+    <span class="fn">print</span>(<span class="s">f"\n--- {dish} ---"</span>)
+    <span class="fn">print</span>(<span class="fn">generate</span>(ft_model, <span class="s">f"Recipe: {dish}\nIngredients:"</span>))</pre>
+  </div>
+
+  <div class="expected">
+    <div class="expected-label">Expected Output</div>
+    <ul>
+      <li>Base GPT-2: generates generic, non-recipe text when prompted</li>
+      <li>Training loss: starts ~3.5, should drop to ~1.8 by epoch 3</li>
+      <li>Fine-tuned: generates ingredient lists and cooking steps in recipe format</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <div class="challenge-label">🔥 Stretch Challenge</div>
+    <p>Change <code>num_train_epochs</code> to 1, 3, and 5. For each, generate text for the same prompt and save the outputs. Can you observe the model overfitting at epoch 5 (outputs becoming too repetitive or copying training data verbatim)?</p>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-title">✦ Knowledge Check — Problem 2</div>
+    <div class="quiz-q" id="q2">
+      <p>After 3 epochs, your training loss is 1.2 but the model generates repetitive, looping text. What is the most likely cause?</p>
+      <div class="options">
+        <div class="opt" onclick="answer(this,'q2','A')"><span class="opt-key">A</span> Learning rate is too low</div>
+        <div class="opt" onclick="answer(this,'q2','B')"><span class="opt-key">B</span> The model is overfitting — it memorized training data, use temperature or top-p sampling</div>
+        <div class="opt" onclick="answer(this,'q2','C')"><span class="opt-key">C</span> Not enough training epochs</div>
+        <div class="opt" onclick="answer(this,'q2','D')"><span class="opt-key">D</span> The tokenizer is incorrect</div>
+      </div>
+      <div class="feedback" id="q2-fb"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-div">
+
+<!-- ===== PROBLEM 3 ===== -->
+<section class="problem-section" id="p3">
+  <div class="problem-header">
+    <div class="problem-num p3">P3</div>
+    <div>
+      <div class="problem-title">Hyperparameter Sensitivity Experiment</div>
+      <div class="problem-meta">
+        <span class="badge badge-medium">MEDIUM</span>
+        <span class="badge badge-time">⏱ 45 min</span>
+        <span class="badge badge-topic">Hyperparameters</span>
+        <span class="badge badge-topic">Learning Rate</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="objective">
+    <div class="objective-label">What you'll learn</div>
+    <ul>
+      <li>See how learning rate affects training stability</li>
+      <li>Compare different batch sizes empirically</li>
+      <li>Plot loss curves for multiple configurations</li>
+      <li>Understand warm-up steps in practice</li>
+    </ul>
+  </div>
+
+  <p>Instead of just reading about hyperparameters, you'll run the same model with 4 different learning rates and plot the loss curves — seeing the theory come alive in a chart.</p>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">PYTHON — Hyperparameter sensitivity experiment</span>
+      <button class="copy-btn" onclick="copyCode(this, 'code3')">Copy</button>
+    </div>
+    <pre id="code3"><span class="c"># ============================================================
+# PRACTICE PROBLEM 3: Hyperparameter Sensitivity
+# Uses DistilBERT on SST-2 (sentiment classification)
+# ============================================================</span>
+
+<span class="fn">!</span>pip install transformers datasets evaluate scikit-learn -q
+
+<span class="k">from</span> transformers <span class="k">import</span> (
+    AutoTokenizer, AutoModelForSequenceClassification,
+    TrainingArguments, Trainer
+)
+<span class="k">from</span> datasets <span class="k">import</span> load_dataset
+<span class="k">import</span> evaluate, numpy <span class="k">as</span> np
+<span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+
+<span class="c"># CELL 1 — Load data (SST-2: binary sentiment)</span>
+dataset = <span class="fn">load_dataset</span>(<span class="s">"glue"</span>, <span class="s">"sst2"</span>)
+tokenizer = <span class="fn">AutoTokenizer</span>.<span class="fn">from_pretrained</span>(<span class="s">"distilbert-base-uncased"</span>)
+
+<span class="k">def</span> <span class="fn">tokenize</span>(batch):
+    <span class="k">return</span> <span class="fn">tokenizer</span>(batch[<span class="s">"sentence"</span>], truncation=<span class="v">True</span>, padding=<span class="s">"max_length"</span>, max_length=<span class="n">128</span>)
+
+<span class="c"># Use small subset for speed (500 train, 200 val)</span>
+small_train = dataset[<span class="s">"train"</span>].<span class="fn">shuffle</span>(seed=<span class="n">42</span>).<span class="fn">select</span>(<span class="fn">range</span>(<span class="n">500</span>)).<span class="fn">map</span>(tokenize, batched=<span class="v">True</span>)
+small_val   = dataset[<span class="s">"validation"</span>].<span class="fn">shuffle</span>(seed=<span class="n">42</span>).<span class="fn">select</span>(<span class="fn">range</span>(<span class="n">200</span>)).<span class="fn">map</span>(tokenize, batched=<span class="v">True</span>)
+small_train.<span class="fn">set_format</span>(<span class="s">"torch"</span>, columns=[<span class="s">"input_ids"</span>, <span class="s">"attention_mask"</span>, <span class="s">"label"</span>])
+small_val.<span class="fn">set_format</span>(<span class="s">"torch"</span>, columns=[<span class="s">"input_ids"</span>, <span class="s">"attention_mask"</span>, <span class="s">"label"</span>])
+
+metric = evaluate.<span class="fn">load</span>(<span class="s">"accuracy"</span>)
+<span class="k">def</span> <span class="fn">compute_metrics</span>(eval_pred):
+    logits, labels = eval_pred
+    preds = np.<span class="fn">argmax</span>(logits, axis=-<span class="n">1</span>)
+    <span class="k">return</span> metric.<span class="fn">compute</span>(predictions=preds, references=labels)
+
+<span class="c"># CELL 2 — Run experiment across 4 learning rates</span>
+learning_rates = [<span class="n">1e-3</span>, <span class="n">1e-4</span>, <span class="n">5e-5</span>, <span class="n">1e-6</span>]
+results = {}
+
+<span class="k">for</span> lr <span class="k">in</span> learning_rates:
+    <span class="fn">print</span>(<span class="s">f"\n▶ Training with LR = {lr}"</span>)
+    model = <span class="fn">AutoModelForSequenceClassification</span>.<span class="fn">from_pretrained</span>(
+        <span class="s">"distilbert-base-uncased"</span>, num_labels=<span class="n">2</span>
+    )
+    args = <span class="fn">TrainingArguments</span>(
+        output_dir              = <span class="s">f"./lr-{lr}"</span>,
+        num_train_epochs        = <span class="n">3</span>,
+        per_device_train_batch_size = <span class="n">16</span>,
+        per_device_eval_batch_size  = <span class="n">32</span>,
+        learning_rate           = lr,
+        warmup_steps            = <span class="n">50</span>,
+        evaluation_strategy     = <span class="s">"epoch"</span>,
+        logging_steps           = <span class="n">20</span>,
+        load_best_model_at_end  = <span class="v">True</span>,
+        metric_for_best_model   = <span class="s">"accuracy"</span>,
+        report_to               = <span class="s">"none"</span>
+    )
+    trainer = <span class="fn">Trainer</span>(
+        model           = model,
+        args            = args,
+        train_dataset   = small_train,
+        eval_dataset    = small_val,
+        compute_metrics = compute_metrics,
+    )
+    trainer.<span class="fn">train</span>()
+    eval_result = trainer.<span class="fn">evaluate</span>()
+    results[lr] = {
+        <span class="s">"accuracy"</span>  : eval_result[<span class="s">"eval_accuracy"</span>],
+        <span class="s">"loss"</span>      : eval_result[<span class="s">"eval_loss"</span>],
+        <span class="s">"log_history"</span>: trainer.state.log_history
+    }
+    <span class="fn">print</span>(<span class="s">f"  Final accuracy: {eval_result['eval_accuracy']:.4f}"</span>)
+
+<span class="c"># CELL 3 — Plot results comparison</span>
+fig, (ax1, ax2) = plt.<span class="fn">subplots</span>(<span class="n">1</span>, <span class="n">2</span>, figsize=(<span class="n">14</span>, <span class="n">5</span>))
+
+<span class="c"># Bar chart: final accuracy per LR</span>
+lrs_str = [<span class="s">f"{lr}"</span> <span class="k">for</span> lr <span class="k">in</span> learning_rates]
+accs    = [results[lr][<span class="s">"accuracy"</span>] <span class="k">for</span> lr <span class="k">in</span> learning_rates]
+colors  = [<span class="s">'tomato'</span>, <span class="s">'steelblue'</span>, <span class="s">'seagreen'</span>, <span class="s">'orange'</span>]
+ax1.<span class="fn">bar</span>(lrs_str, accs, color=colors, edgecolor=<span class="s">'white'</span>)
+ax1.<span class="fn">set_xlabel</span>(<span class="s">"Learning Rate"</span>); ax1.<span class="fn">set_ylabel</span>(<span class="s">"Validation Accuracy"</span>)
+ax1.<span class="fn">set_title</span>(<span class="s">"Final Accuracy vs Learning Rate"</span>)
+ax1.<span class="fn">set_ylim</span>(<span class="n">0.5</span>, <span class="n">1.0</span>)
+<span class="k">for</span> i, v <span class="k">in</span> <span class="fn">enumerate</span>(accs):
+    ax1.<span class="fn">text</span>(i, v + <span class="n">0.005</span>, <span class="s">f"{v:.3f}"</span>, ha=<span class="s">'center'</span>, fontsize=<span class="n">9</span>)
+
+<span class="c"># Summary table</span>
+ax2.<span class="fn">axis</span>(<span class="s">'off'</span>)
+table_data = [[lr, <span class="s">f"{results[lr]['accuracy']:.4f}"</span>, <span class="s">f"{results[lr]['loss']:.4f}"</span>] <span class="k">for</span> lr <span class="k">in</span> learning_rates]
+tbl = ax2.<span class="fn">table</span>(
+    cellText   = table_data,
+    colLabels  = [<span class="s">"Learning Rate"</span>, <span class="s">"Val Accuracy"</span>, <span class="s">"Val Loss"</span>],
+    loc        = <span class="s">'center'</span>, cellLoc=<span class="s">'center'</span>
+)
+tbl.<span class="fn">scale</span>(<span class="n">1.4</span>, <span class="n">2.0</span>)
+ax2.<span class="fn">set_title</span>(<span class="s">"Results Summary"</span>)
+plt.<span class="fn">tight_layout</span>()
+plt.<span class="fn">show</span>()
+
+best_lr = <span class="fn">max</span>(results, key=<span class="k">lambda</span> x: results[x][<span class="s">"accuracy"</span>])
+<span class="fn">print</span>(<span class="s">f"\n🏆 Best learning rate: {best_lr} → accuracy: {results[best_lr]['accuracy']:.4f}"</span>)</pre>
+  </div>
+
+  <div class="expected">
+    <div class="expected-label">Expected Output</div>
+    <ul>
+      <li>LR=1e-3: unstable, low accuracy (~55-60%) — too aggressive</li>
+      <li>LR=5e-5: best performance (~85-90%) — standard fine-tuning range</li>
+      <li>LR=1e-6: barely changes from base model (~50-55%) — too slow</li>
+      <li>Bar chart clearly showing the "Goldilocks zone" of learning rates</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-title">✦ Knowledge Check — Problem 3</div>
+    <div class="quiz-q" id="q3">
+      <p>In your experiment, LR=1e-3 gets 56% accuracy and LR=5e-5 gets 88%. What does warmup_steps=50 actually do?</p>
+      <div class="options">
+        <div class="opt" onclick="answer(this,'q3','A')"><span class="opt-key">A</span> Skips the first 50 training examples</div>
+        <div class="opt" onclick="answer(this,'q3','B')"><span class="opt-key">B</span> Gradually increases LR from ~0 to the target LR over the first 50 steps, preventing wild early updates</div>
+        <div class="opt" onclick="answer(this,'q3','C')"><span class="opt-key">C</span> Freezes the model for the first 50 steps</div>
+        <div class="opt" onclick="answer(this,'q3','D')"><span class="opt-key">D</span> Trains on 50 extra samples before the main training loop</div>
+      </div>
+      <div class="feedback" id="q3-fb"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-div">
+
+<!-- ===== PROBLEM 4 ===== -->
+<section class="problem-section" id="p4">
+  <div class="problem-header">
+    <div class="problem-num p4">P4</div>
+    <div>
+      <div class="problem-title">Compute BLEU & ROUGE from Scratch</div>
+      <div class="problem-meta">
+        <span class="badge badge-easy">EASY</span>
+        <span class="badge badge-time">⏱ 25 min</span>
+        <span class="badge badge-topic">BLEU</span>
+        <span class="badge badge-topic">ROUGE</span>
+        <span class="badge badge-topic">Evaluation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="objective">
+    <div class="objective-label">What you'll learn</div>
+    <ul>
+      <li>Compute BLEU and ROUGE scores manually</li>
+      <li>Understand what n-gram overlap actually measures</li>
+      <li>Evaluate a Flan-T5 summarization model</li>
+      <li>Interpret scores and understand their limits</li>
+    </ul>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">PYTHON — BLEU & ROUGE evaluation (CPU is fine)</span>
+      <button class="copy-btn" onclick="copyCode(this, 'code4')">Copy</button>
+    </div>
+    <pre id="code4"><span class="c"># ============================================================
+# PRACTICE PROBLEM 4: BLEU & ROUGE Evaluation
+# No GPU needed — runs on CPU in ~5 minutes
+# ============================================================</span>
+
+<span class="fn">!</span>pip install transformers datasets evaluate rouge-score sacrebleu -q
+
+<span class="k">from</span> transformers <span class="k">import</span> pipeline
+<span class="k">from</span> datasets <span class="k">import</span> load_dataset
+<span class="k">import</span> evaluate
+<span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+
+<span class="c"># CELL 1 — Understand BLEU manually first</span>
+<span class="k">def</span> <span class="fn">get_ngrams</span>(text, n):
+    words = text.<span class="fn">lower</span>().<span class="fn">split</span>()
+    <span class="k">return</span> [<span class="fn">tuple</span>(words[i:i+n]) <span class="k">for</span> i <span class="k">in</span> <span class="fn">range</span>(<span class="fn">len</span>(words) - n + <span class="n">1</span>)]
+
+reference = <span class="s">"The cat sat on the mat"</span>
+generated = <span class="s">"The cat is on the mat"</span>
+
+<span class="k">for</span> n <span class="k">in</span> [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]:
+    ref_ng = <span class="fn">set</span>(<span class="fn">get_ngrams</span>(reference, n))
+    gen_ng = <span class="fn">get_ngrams</span>(generated, n)
+    matches = <span class="fn">sum</span>(<span class="n">1</span> <span class="k">for</span> ng <span class="k">in</span> gen_ng <span class="k">if</span> ng <span class="k">in</span> ref_ng)
+    precision = matches / <span class="fn">len</span>(gen_ng) <span class="k">if</span> gen_ng <span class="k">else</span> <span class="n">0</span>
+    <span class="fn">print</span>(<span class="s">f"BLEU-{n} precision: {matches}/{len(gen_ng)} = {precision:.3f}"</span>)
+
+<span class="c"># CELL 2 — Load a small dialogue summarization test set</span>
+dataset = <span class="fn">load_dataset</span>(<span class="s">"knkarthick/dialogsum"</span>, split=<span class="s">"test[:50]"</span>)
+<span class="fn">print</span>(<span class="s">f"Test samples: {len(dataset)}"</span>)
+
+<span class="c"># CELL 3 — Use Flan-T5 to generate summaries</span>
+summarizer = <span class="fn">pipeline</span>(
+    <span class="s">"text2text-generation"</span>,
+    model     = <span class="s">"google/flan-t5-base"</span>,
+    tokenizer = <span class="s">"google/flan-t5-base"</span>,
+    max_length = <span class="n">128</span>
+)
+
+<span class="fn">print</span>(<span class="s">"Generating summaries (this may take 2-3 minutes)..."</span>)
+predictions = []
+references  = []
+
+<span class="k">for</span> i, item <span class="k">in</span> <span class="fn">enumerate</span>(dataset):
+    prompt = <span class="s">f"Summarize the following conversation:\n{item['dialogue']}"</span>
+    output = <span class="fn">summarizer</span>(prompt)[<span class="n">0</span>][<span class="s">'generated_text'</span>]
+    predictions.<span class="fn">append</span>(output)
+    references.<span class="fn">append</span>(item[<span class="s">'summary'</span>])
+    <span class="k">if</span> i % <span class="n">10</span> == <span class="n">0</span>: <span class="fn">print</span>(<span class="s">f"  {i+1}/50 done"</span>)
+
+<span class="c"># CELL 4 — Compute BLEU</span>
+bleu = evaluate.<span class="fn">load</span>(<span class="s">"sacrebleu"</span>)
+bleu_score = <span class="fn">bleu</span>.<span class="fn">compute</span>(
+    predictions = predictions,
+    references  = [[r] <span class="k">for</span> r <span class="k">in</span> references]
+)
+<span class="fn">print</span>(<span class="s">f"\n📊 BLEU score: {bleu_score['score']:.2f} / 100"</span>)
+
+<span class="c"># CELL 5 — Compute ROUGE</span>
+rouge = evaluate.<span class="fn">load</span>(<span class="s">"rouge"</span>)
+rouge_score = <span class="fn">rouge</span>.<span class="fn">compute</span>(
+    predictions = predictions,
+    references  = references
+)
+<span class="fn">print</span>(<span class="s">f"📊 ROUGE-1 : {rouge_score['rouge1']:.4f}"</span>)
+<span class="fn">print</span>(<span class="s">f"📊 ROUGE-2 : {rouge_score['rouge2']:.4f}"</span>)
+<span class="fn">print</span>(<span class="s">f"📊 ROUGE-L : {rouge_score['rougeL']:.4f}"</span>)
+
+<span class="c"># CELL 6 — Show side-by-side examples</span>
+<span class="fn">print</span>(<span class="s">"\n=== QUALITATIVE EXAMPLES ==="</span>)
+<span class="k">for</span> i <span class="k">in</span> [<span class="n">0</span>, <span class="n">5</span>, <span class="n">10</span>]:
+    <span class="fn">print</span>(<span class="s">f"\n[Example {i+1}]"</span>)
+    <span class="fn">print</span>(<span class="s">f"Dialogue : {dataset[i]['dialogue'][:120]}..."</span>)
+    <span class="fn">print</span>(<span class="s">f"Reference: {references[i]}"</span>)
+    <span class="fn">print</span>(<span class="s">f"Generated: {predictions[i]}"</span>)
+
+<span class="c"># CELL 7 — Visualize scores</span>
+labels = [<span class="s">'ROUGE-1'</span>, <span class="s">'ROUGE-2'</span>, <span class="s">'ROUGE-L'</span>]
+values = [rouge_score[<span class="s">'rouge1'</span>], rouge_score[<span class="s">'rouge2'</span>], rouge_score[<span class="s">'rougeL'</span>]]
+colors = [<span class="s">'#22d3a0'</span>, <span class="s">'#60a5fa'</span>, <span class="s">'#a78bfa'</span>]
+plt.<span class="fn">figure</span>(figsize=(<span class="n">8</span>, <span class="n">4</span>))
+bars = plt.<span class="fn">bar</span>(labels, values, color=colors, edgecolor=<span class="s">'white'</span>, width=<span class="n">0.5</span>)
+plt.<span class="fn">ylim</span>(<span class="n">0</span>, <span class="n">1</span>)
+plt.<span class="fn">title</span>(<span class="s">"ROUGE Scores — Flan-T5 on DialogSum (50 test samples)"</span>)
+plt.<span class="fn">ylabel</span>(<span class="s">"Score"</span>)
+<span class="k">for</span> bar, val <span class="k">in</span> <span class="fn">zip</span>(bars, values):
+    plt.<span class="fn">text</span>(bar.get_x() + bar.get_width()/<span class="n">2</span>, val + <span class="n">0.01</span>, <span class="s">f"{val:.3f}"</span>, ha=<span class="s">'center'</span>)
+plt.<span class="fn">tight_layout</span>()
+plt.<span class="fn">show</span>()</pre>
+  </div>
+
+  <div class="expected">
+    <div class="expected-label">Expected Output</div>
+    <ul>
+      <li>BLEU score: ~15-25 (reasonable for a base model, not fine-tuned)</li>
+      <li>ROUGE-1: ~0.35–0.45, ROUGE-2: ~0.12–0.18, ROUGE-L: ~0.30–0.40</li>
+      <li>Qualitative examples showing where the model gets it right vs wrong</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <div class="challenge-label">🔥 Stretch Challenge</div>
+    <p>The base Flan-T5 is not fine-tuned on DialogSum. After completing Problem 2's fine-tuning approach but applied to Flan-T5 on DialogSum, re-run the BLEU/ROUGE evaluation. How much do scores improve? This is the complete fine-tuning → evaluation pipeline.</p>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-title">✦ Knowledge Check — Problem 4</div>
+    <div class="quiz-q" id="q4">
+      <p>Your model gets ROUGE-1=0.42 but ROUGE-2=0.08. What does this tell you?</p>
+      <div class="options">
+        <div class="opt" onclick="answer(this,'q4','A')"><span class="opt-key">A</span> The model is perfect at single word matching but uses very different phrasing than the reference</div>
+        <div class="opt" onclick="answer(this,'q4','B')"><span class="opt-key">B</span> The model is broken — ROUGE-2 should always be higher</div>
+        <div class="opt" onclick="answer(this,'q4','C')"><span class="opt-key">C</span> You should use BLEU instead</div>
+        <div class="opt" onclick="answer(this,'q4','D')"><span class="opt-key">D</span> The dataset is too small</div>
+      </div>
+      <div class="feedback" id="q4-fb"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-div">
+
+<!-- ===== PROBLEM 5 ===== -->
+<section class="problem-section" id="p5">
+  <div class="problem-header">
+    <div class="problem-num p5">P5</div>
+    <div>
+      <div class="problem-title">Build a RAG Pipeline from Scratch</div>
+      <div class="problem-meta">
+        <span class="badge badge-hard">HARD</span>
+        <span class="badge badge-time">⏱ 60 min</span>
+        <span class="badge badge-topic">RAG</span>
+        <span class="badge badge-topic">Vector Search</span>
+        <span class="badge badge-topic">FAISS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="objective">
+    <div class="objective-label">What you'll learn</div>
+    <ul>
+      <li>Embed documents into a vector store using FAISS</li>
+      <li>Retrieve relevant context based on a user query</li>
+      <li>Augment prompts with retrieved context</li>
+      <li>Compare RAG answers vs vanilla LLM answers</li>
+    </ul>
+  </div>
+
+  <p>You'll build a mini Q&A system over a custom knowledge base — exactly what powers enterprise chatbots. By the end, you'll have a working RAG pipeline that any document can be plugged into.</p>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">PYTHON — Full RAG pipeline (CPU fine, ~10 min)</span>
+      <button class="copy-btn" onclick="copyCode(this, 'code5')">Copy</button>
+    </div>
+    <pre id="code5"><span class="c"># ============================================================
+# PRACTICE PROBLEM 5: Build a RAG Pipeline
+# No GPU needed. Uses FAISS + Sentence-BERT + Flan-T5
+# ============================================================</span>
+
+<span class="fn">!</span>pip install transformers sentence-transformers faiss-cpu -q
+
+<span class="k">from</span> sentence_transformers <span class="k">import</span> SentenceTransformer
+<span class="k">from</span> transformers <span class="k">import</span> pipeline
+<span class="k">import</span> faiss, numpy <span class="k">as</span> np
+
+<span class="c"># CELL 1 — Your "knowledge base" (replace with your own documents!)</span>
+documents = [
+    <span class="s">"PayPal is a digital payments platform founded in 1998. It allows users to send and receive money online."</span>,
+    <span class="s">"Buy Now Pay Later (BNPL) services let customers purchase items immediately and pay in installments."</span>,
+    <span class="s">"BNPL products typically charge 0% interest if paid on time, but late fees can apply."</span>,
+    <span class="s">"PayPal Pay Later is PayPal's BNPL offering, available at millions of merchants."</span>,
+    <span class="s">"Fine-tuning an LLM means continuing training on a smaller, domain-specific dataset."</span>,
+    <span class="s">"Retrieval Augmented Generation (RAG) combines a retriever with a language model to produce factual answers."</span>,
+    <span class="s">"BLEU score measures machine translation quality by comparing n-gram overlap with reference translations."</span>,
+    <span class="s">"ROUGE score is used for summarization evaluation, measuring recall of n-grams in generated text."</span>,
+    <span class="s">"The learning rate in neural network training controls how much weights are updated per gradient step."</span>,
+    <span class="s">"Overfitting occurs when a model memorizes training data and fails to generalize to new examples."</span>,
+    <span class="s">"Transformer architecture uses self-attention to weigh the importance of different words in context."</span>,
+    <span class="s">"GPT-2 is a generative pre-trained transformer with 1.5 billion parameters trained on WebText dataset."</span>,
+    <span class="s">"Flan-T5 is an instruction-tuned version of T5, trained on a mixture of tasks for better zero-shot performance."</span>,
+    <span class="s">"Vector embeddings convert text into numerical arrays that capture semantic meaning."</span>,
+    <span class="s">"FAISS (Facebook AI Similarity Search) enables fast nearest-neighbor search over large sets of vectors."</span>,
+]
+
+<span class="c"># CELL 2 — Embed all documents into a FAISS vector index</span>
+embedder = <span class="fn">SentenceTransformer</span>(<span class="s">"all-MiniLM-L6-v2"</span>)  <span class="c"># Fast, small, good quality</span>
+
+<span class="fn">print</span>(<span class="s">"Embedding documents..."</span>)
+doc_embeddings = embedder.<span class="fn">encode</span>(documents, convert_to_numpy=<span class="v">True</span>)
+<span class="fn">print</span>(<span class="s">f"Embedding shape: {doc_embeddings.shape}"</span>)  <span class="c"># (15, 384)</span>
+
+<span class="c"># Build FAISS index</span>
+dim   = doc_embeddings.shape[<span class="n">1</span>]
+index = faiss.<span class="fn">IndexFlatL2</span>(dim)
+index.<span class="fn">add</span>(doc_embeddings.<span class="fn">astype</span>(<span class="s">'float32'</span>))
+<span class="fn">print</span>(<span class="s">f"FAISS index built with {index.ntotal} vectors"</span>)
+
+<span class="c"># CELL 3 — Retriever function</span>
+<span class="k">def</span> <span class="fn">retrieve</span>(query, top_k=<span class="n">3</span>):
+    query_vec = embedder.<span class="fn">encode</span>([query], convert_to_numpy=<span class="v">True</span>).<span class="fn">astype</span>(<span class="s">'float32'</span>)
+    distances, indices = index.<span class="fn">search</span>(query_vec, top_k)
+    retrieved = [documents[i] <span class="k">for</span> i <span class="k">in</span> indices[<span class="n">0</span>]]
+    <span class="k">return</span> retrieved, distances[<span class="n">0</span>]
+
+<span class="c"># CELL 4 — Load Flan-T5 as the generator</span>
+generator = <span class="fn">pipeline</span>(<span class="s">"text2text-generation"</span>, model=<span class="s">"google/flan-t5-base"</span>, max_length=<span class="n">200</span>)
+
+<span class="c"># CELL 5 — The full RAG function</span>
+<span class="k">def</span> <span class="fn">rag_answer</span>(query, top_k=<span class="n">3</span>):
+    <span class="c"># Step 1: Retrieve</span>
+    context_docs, scores = <span class="fn">retrieve</span>(query, top_k=top_k)
+    context = <span class="s">"\n"</span>.<span class="fn">join</span>(<span class="s">f"- {doc}"</span> <span class="k">for</span> doc <span class="k">in</span> context_docs)
+
+    <span class="c"># Step 2: Augment prompt with context</span>
+    prompt = <span class="s">f"""Based on the following context, answer the question.
+
+Context:
+{context}
+
+Question: {query}
+
+Answer:"""</span>
+
+    <span class="c"># Step 3: Generate</span>
+    response = <span class="fn">generator</span>(prompt)[<span class="n">0</span>][<span class="s">'generated_text'</span>]
+    <span class="k">return</span> response, context_docs
+
+<span class="k">def</span> <span class="fn">vanilla_answer</span>(query):
+    <span class="c"># Without RAG — just the raw question</span>
+    <span class="k">return</span> <span class="fn">generator</span>(query)[<span class="n">0</span>][<span class="s">'generated_text'</span>]
+
+<span class="c"># CELL 6 — Test with real questions</span>
+test_questions = [
+    <span class="s">"What is BNPL and how does PayPal offer it?"</span>,
+    <span class="s">"What is the difference between BLEU and ROUGE?"</span>,
+    <span class="s">"Why does overfitting happen and how does it affect model performance?"</span>,
+    <span class="s">"What is FAISS used for in a RAG system?"</span>,
+]
+
+<span class="fn">print</span>(<span class="s">"="</span>*<span class="n">60</span>)
+<span class="k">for</span> q <span class="k">in</span> test_questions:
+    rag_ans, ctx = <span class="fn">rag_answer</span>(q)
+    van_ans = <span class="fn">vanilla_answer</span>(q)
+    <span class="fn">print</span>(<span class="s">f"\n❓ Question: {q}"</span>)
+    <span class="fn">print</span>(<span class="s">f"🤖 Vanilla : {van_ans}"</span>)
+    <span class="fn">print</span>(<span class="s">f"📚 RAG     : {rag_ans}"</span>)
+    <span class="fn">print</span>(<span class="s">f"📄 Sources : {ctx[0][:80]}..."</span>)
+    <span class="fn">print</span>(<span class="s">"-"</span>*<span class="n">60</span>)
+
+<span class="c"># CELL 7 — Interactive mode: ask your own questions!</span>
+<span class="fn">print</span>(<span class="s">"\n🎯 Interactive Mode — Ask anything from the knowledge base!"</span>)
+<span class="fn">print</span>(<span class="s">"Type 'quit' to stop\n"</span>)
+<span class="k">while</span> <span class="v">True</span>:
+    q = <span class="fn">input</span>(<span class="s">"Your question: "</span>)
+    <span class="k">if</span> q.<span class="fn">lower</span>() == <span class="s">'quit'</span>: <span class="k">break</span>
+    ans, ctx = <span class="fn">rag_answer</span>(q)
+    <span class="fn">print</span>(<span class="s">f"Answer: {ans}"</span>)
+    <span class="fn">print</span>(<span class="s">f"Based on: {ctx[0][:100]}...\n"</span>)</pre>
+  </div>
+
+  <div class="expected">
+    <div class="expected-label">Expected Output</div>
+    <ul>
+      <li>Embedding shape: (15, 384) — 15 documents, 384-dim vectors</li>
+      <li>Vanilla answer: generic / sometimes wrong without context</li>
+      <li>RAG answer: directly references facts from the knowledge base</li>
+      <li>Interactive mode: answers questions using retrieved context</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <div class="challenge-label">🔥 Stretch Challenge</div>
+    <p>Replace the hardcoded <code>documents</code> list with a PDF reader: use <code>PyPDF2</code> to extract text from any PDF you have, split it into 200-word chunks, and add those chunks to the FAISS index. You now have a personal document Q&A system — the same architecture used in enterprise AI chatbots.</p>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-title">✦ Knowledge Check — Problem 5</div>
+    <div class="quiz-q" id="q5">
+      <p>In your RAG pipeline, FAISS returns documents by <em>L2 distance</em>. A document has distance=0.12 and another has distance=2.8. Which one should be used as context?</p>
+      <div class="options">
+        <div class="opt" onclick="answer(this,'q5','A')"><span class="opt-key">A</span> Distance 2.8 — larger means more content</div>
+        <div class="opt" onclick="answer(this,'q5','B')"><span class="opt-key">B</span> Distance 0.12 — smaller L2 distance means vectors are more similar (closer in meaning)</div>
+        <div class="opt" onclick="answer(this,'q5','C')"><span class="opt-key">C</span> Both equally — distance doesn't matter in FAISS</div>
+        <div class="opt" onclick="answer(this,'q5','D')"><span class="opt-key">D</span> It depends on the document length</div>
+      </div>
+      <div class="feedback" id="q5-fb"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>LLM Fine-tuning Practice Problems &nbsp;·&nbsp; All code runs on free Google Colab T4 GPU &nbsp;·&nbsp; Designed for interactive classroom sessions</footer>
+
+<script>
+const answers = {
+  q1: { correct: 'D', explanation: 'D is the most principled approach — truncation (B) loses information. Deleting (A) wastes data. Simply increasing max_length (C) consumes GPU memory exponentially. Chunking long documents into overlapping windows is standard practice in production NLP.' },
+  q2: { correct: 'B', explanation: 'Low training loss + repetitive generation = overfitting. The model memorized patterns so well it loops. Fix: use temperature=0.8-1.0 and top_p=0.9 in generation to add controlled randomness. Also try reducing epochs or adding dropout.' },
+  q3: { correct: 'B', explanation: 'Warm-up steps gradually increase the learning rate from ~0 to the target value over the specified steps. This is critical for fine-tuning pre-trained models — starting with the full LR often "shocks" the pre-trained weights and destroys the learned representations in the first few batches.' },
+  q4: { correct: 'A', explanation: 'ROUGE-1=0.42 means 42% of individual words match — decent vocabulary overlap. ROUGE-2=0.08 means almost no 2-word phrases match. The model uses the right words but in completely different orders and combinations. This is a classic sign of a model that knows the domain vocabulary but hasn\'t learned the sentence structure of the reference summaries.' },
+  q5: { correct: 'B', explanation: 'L2 (Euclidean) distance measures how far apart two vectors are in space. Distance=0 means identical, distance=2.8 means very different. FAISS returns results sorted smallest-to-largest distance, so the first result (smallest distance) is always the most semantically similar to your query.' }
+};
+
+function answer(el, qid, choice) {
+  const q = answers[qid];
+  const opts = document.querySelectorAll(`#${qid} .opt`);
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default'; });
+  const fb = document.getElementById(`${qid}-fb`);
+  if (choice === q.correct) {
+    el.classList.add('correct');
+    fb.className = 'feedback show ok';
+    fb.innerHTML = `✓ Correct! ${q.explanation}`;
+  } else {
+    el.classList.add('wrong');
+    opts.forEach(o => { if (o.textContent.trim().startsWith(q.correct)) o.classList.add('correct'); });
+    fb.className = 'feedback show no';
+    fb.innerHTML = `✗ Not quite. ${q.explanation}`;
+  }
+}
+
+function copyCode(btn, id) {
+  const pre = document.getElementById(id);
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
